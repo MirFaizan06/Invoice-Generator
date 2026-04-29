@@ -1,0 +1,39 @@
+INVOICEGENERATOR – END USER LICENSE AGREEMENT
+Copyright © 2026 Tech Bytes Design. All rights reserved.
+
+IMPORTANT: PLEASE READ THIS AGREEMENT CAREFULLY BEFORE INSTALLING OR USING THIS SOFTWARE.
+
+By installing or using InvoiceGenerator ("Software"), you agree to be bound by the terms of this License Agreement.
+
+1. LICENSE GRANT
+   Tech Bytes Design grants you a non-exclusive, non-transferable license to install and use this Software on devices you own or control, solely for your personal or internal business purposes.
+
+2. RESTRICTIONS
+   You may NOT:
+   a) Copy, modify, or distribute the Software without prior written permission.
+   b) Reverse engineer, decompile, or disassemble the Software.
+   c) Resell, sublicense, or commercially redistribute the Software.
+   d) Remove or alter any proprietary notices or labels on the Software.
+
+3. OWNERSHIP
+   The Software is licensed, not sold. Tech Bytes Design retains all title, copyright, and other proprietary rights in and to the Software.
+
+4. DATA PRIVACY
+   All data stored by InvoiceGenerator remains on your local device. No data is transmitted to any external servers. Tech Bytes Design does not collect, access, or store any of your business or invoice data.
+
+5. DISCLAIMER OF WARRANTIES
+   THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND. TECH BYTES DESIGN DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+
+6. LIMITATION OF LIABILITY
+   IN NO EVENT SHALL TECH BYTES DESIGN BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OR INABILITY TO USE THE SOFTWARE.
+
+7. TERMINATION
+   This license is effective until terminated. It terminates automatically if you fail to comply with any term of this Agreement.
+
+8. GOVERNING LAW
+   This Agreement shall be governed by the laws of India.
+
+Developer: Mir Faizan
+Company:   Tech Bytes Design
+Contact:   techbytesdesign@gmail.com
+Website:   techbytesdesign.com

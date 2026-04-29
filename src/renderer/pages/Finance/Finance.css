@@ -1,0 +1,61 @@
+.finance-year-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+.finance-year-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  transition: all var(--transition-fast);
+}
+.finance-year-btn:hover:not(:disabled) { background: var(--color-surface-3); }
+.finance-year-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.finance-year-label { font-size: var(--text-sm); font-weight: 600; color: var(--color-text); min-width: 40px; text-align: center; }
+
+.finance-charts {
+  display: flex;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.finance-chart-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-xs);
+}
+
+.finance-chart-header { margin-bottom: var(--space-4); }
+.finance-chart-title { font-size: var(--text-base); font-weight: 600; color: var(--color-text); }
+
+.finance-transactions {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+  overflow: hidden;
+}
+
+.finance-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+}
+.finance-section-title { font-size: var(--text-base); font-weight: 600; color: var(--color-text); }
+.finance-transactions-list { overflow: auto; }
+
+.action-btn { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border: none; background: transparent; border-radius: var(--radius-sm); cursor: pointer; color: var(--color-text-muted); transition: background var(--transition-fast), color var(--transition-fast); }
+.action-btn:hover { background: var(--color-surface-3); color: var(--color-text); }
+.action-btn-danger:hover { background: var(--color-danger-light) !important; color: var(--color-danger) !important; }
