@@ -30,6 +30,10 @@ export function getAllInvoices(filters: InvoiceFilters = {}): Invoice[] {
     query += ' AND status = ?';
     params.push(filters.status);
   }
+  if (filters.business_id) {
+    query += ' AND business_id = ?';
+    params.push(filters.business_id);
+  }
   if (filters.search) {
     query += ' AND (client_name LIKE ? OR invoice_number LIKE ? OR project_name LIKE ?)';
     const s = `%${filters.search}%`;
@@ -82,8 +86,10 @@ export async function createInvoice(data: CreateInvoiceData): Promise<Invoice> {
   `).run(data.business_id, year, nextNum);
 
   const subtotal = data.items.reduce((s, i) => s + i.amount, 0);
-  const taxAmount = (subtotal * data.tax_percent) / 100;
-  const total = subtotal + taxAmount;
+  const discountAmount = data.discount_amount ?? 0;
+  const shippingCharges = data.shipping_charges ?? 0;
+  const taxAmount = ((subtotal - discountAmount) * data.tax_percent) / 100;
+  const total = subtotal - discountAmount + shippingCharges + taxAmount;
 
   const htmlPath = getHtmlPath(invoiceNumber);
   const pdfPath = getPdfPath(invoiceNumber);
@@ -91,26 +97,79 @@ export async function createInvoice(data: CreateInvoiceData): Promise<Invoice> {
   const upiIds = getUpiForBusiness(data.business_id);
   const primaryUpi = upiIds.find((u) => u.is_primary) || upiIds[0];
   let qrDataUrl = '';
+  const upiName = primaryUpi?.upi_name || business.name;
   if (primaryUpi) {
-    const upiString = `upi://pay?pa=${primaryUpi.upi_id}&pn=${encodeURIComponent(business.name)}&am=${total}&cu=INR&tn=${encodeURIComponent(invoiceNumber)}`;
+    const upiString = `upi://pay?pa=${primaryUpi.upi_id}&pn=${encodeURIComponent(upiName)}&am=${total}&cu=${data.currency || 'INR'}&tn=${encodeURIComponent(invoiceNumber)}`;
     qrDataUrl = await generateQRCode(upiString);
   }
 
-  const html = generateInvoiceHTML({ business, invoice: { ...data, invoice_number: invoiceNumber, subtotal, tax_amount: taxAmount, total, id: 0, status: 'unpaid', created_at: '', updated_at: '' }, items: data.items, qrDataUrl, upiId: primaryUpi?.upi_id || '' });
+  let logoDataUrl = '';
+  if (business.logo_path && fs.existsSync(business.logo_path)) {
+    const ext = business.logo_path.split('.').pop()?.toLowerCase() || 'png';
+    const mimeMap: Record<string, string> = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', svg: 'image/svg+xml', webp: 'image/webp' };
+    const mime = mimeMap[ext] || 'image/png';
+    logoDataUrl = `data:${mime};base64,${fs.readFileSync(business.logo_path).toString('base64')}`;
+  }
+
+  const html = generateInvoiceHTML({
+    business,
+    invoice: {
+      ...data,
+      invoice_number: invoiceNumber,
+      subtotal,
+      tax_amount: taxAmount,
+      total,
+      id: 0,
+      status: 'unpaid',
+      created_at: '',
+      updated_at: '',
+      client_gst: data.client_gst || '',
+      po_number: data.po_number || '',
+      place_of_supply: data.place_of_supply || '',
+      payment_terms: data.payment_terms || '',
+      bank_account: data.bank_account || '',
+      bank_name: data.bank_name || '',
+      bank_ifsc: data.bank_ifsc || '',
+      bank_holder: data.bank_holder || '',
+      discount_percent: data.discount_percent ?? 0,
+      discount_amount: discountAmount,
+      shipping_charges: shippingCharges,
+      currency: data.currency || 'INR',
+      html_path: htmlPath,
+      pdf_path: pdfPath,
+    },
+    items: data.items,
+    qrDataUrl,
+    upiId: primaryUpi?.upi_id || '',
+    upiName,
+    logoDataUrl,
+  });
   fs.writeFileSync(htmlPath, html, 'utf-8');
 
   const result = db.prepare(`
-    INSERT INTO invoices (invoice_number, business_id, client_name, client_address, client_email, client_phone, project_name, date, due_date, subtotal, tax_percent, tax_amount, total, notes, html_path, pdf_path)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO invoices (
+      invoice_number, business_id, client_name, client_address, client_email, client_phone,
+      client_gst, project_name, po_number, place_of_supply, payment_terms,
+      date, due_date, subtotal, discount_percent, discount_amount, shipping_charges,
+      tax_percent, tax_amount, total, currency,
+      bank_account, bank_name, bank_ifsc, bank_holder,
+      notes, html_path, pdf_path
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     invoiceNumber, data.business_id, data.client_name, data.client_address, data.client_email, data.client_phone,
-    data.project_name, data.date, data.due_date, subtotal, data.tax_percent, taxAmount, total, data.notes, htmlPath, pdfPath
+    data.client_gst || '', data.project_name, data.po_number || '', data.place_of_supply || '', data.payment_terms || '',
+    data.date, data.due_date, subtotal, data.discount_percent ?? 0, discountAmount, shippingCharges,
+    data.tax_percent, taxAmount, total, data.currency || 'INR',
+    data.bank_account || '', data.bank_name || '', data.bank_ifsc || '', data.bank_holder || '',
+    data.notes, htmlPath, pdfPath
   );
 
   const invoiceId = result.lastInsertRowid as number;
-  const stmt = db.prepare('INSERT INTO invoice_items (invoice_id, title, description, quantity, unit_price, amount, order_index) VALUES (?, ?, ?, ?, ?, ?, ?)');
+  const stmt = db.prepare(
+    'INSERT INTO invoice_items (invoice_id, title, description, quantity, unit_price, amount, order_index, hsn_sac, unit) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+  );
   data.items.forEach((item, idx) => {
-    stmt.run(invoiceId, item.title, item.description, item.quantity, item.unit_price, item.amount, idx);
+    stmt.run(invoiceId, item.title, item.description, item.quantity, item.unit_price, item.amount, idx, item.hsn_sac || '', item.unit || '');
   });
 
   return getInvoiceById(invoiceId)!;
@@ -125,22 +184,40 @@ export function updateInvoice(id: number, data: Partial<CreateInvoiceData>): Inv
   if (data.client_address !== undefined) { fields.push('client_address = ?'); values.push(data.client_address); }
   if (data.client_email !== undefined) { fields.push('client_email = ?'); values.push(data.client_email); }
   if (data.client_phone !== undefined) { fields.push('client_phone = ?'); values.push(data.client_phone); }
+  if (data.client_gst !== undefined) { fields.push('client_gst = ?'); values.push(data.client_gst); }
   if (data.project_name !== undefined) { fields.push('project_name = ?'); values.push(data.project_name); }
+  if (data.po_number !== undefined) { fields.push('po_number = ?'); values.push(data.po_number); }
+  if (data.place_of_supply !== undefined) { fields.push('place_of_supply = ?'); values.push(data.place_of_supply); }
+  if (data.payment_terms !== undefined) { fields.push('payment_terms = ?'); values.push(data.payment_terms); }
   if (data.date !== undefined) { fields.push('date = ?'); values.push(data.date); }
   if (data.due_date !== undefined) { fields.push('due_date = ?'); values.push(data.due_date); }
   if (data.notes !== undefined) { fields.push('notes = ?'); values.push(data.notes); }
+  if (data.currency !== undefined) { fields.push('currency = ?'); values.push(data.currency); }
+  if (data.bank_account !== undefined) { fields.push('bank_account = ?'); values.push(data.bank_account); }
+  if (data.bank_name !== undefined) { fields.push('bank_name = ?'); values.push(data.bank_name); }
+  if (data.bank_ifsc !== undefined) { fields.push('bank_ifsc = ?'); values.push(data.bank_ifsc); }
+  if (data.bank_holder !== undefined) { fields.push('bank_holder = ?'); values.push(data.bank_holder); }
 
   if (data.items !== undefined) {
     const subtotal = data.items.reduce((s, i) => s + i.amount, 0);
     const taxPercent = data.tax_percent ?? (getInvoiceById(id)?.tax_percent || 18);
-    const taxAmount = (subtotal * taxPercent) / 100;
-    const total = subtotal + taxAmount;
+    const discountAmount = data.discount_amount ?? (getInvoiceById(id)?.discount_amount || 0);
+    const shippingCharges = data.shipping_charges ?? (getInvoiceById(id)?.shipping_charges || 0);
+    const discountPercent = data.discount_percent ?? (getInvoiceById(id)?.discount_percent || 0);
+    const taxAmount = ((subtotal - discountAmount) * taxPercent) / 100;
+    const total = subtotal - discountAmount + shippingCharges + taxAmount;
+
     fields.push('subtotal = ?', 'tax_percent = ?', 'tax_amount = ?', 'total = ?');
-    values.push(subtotal, taxPercent, taxAmount, total);
+    fields.push('discount_percent = ?', 'discount_amount = ?', 'shipping_charges = ?');
+    values.push(subtotal, taxPercent, taxAmount, total, discountPercent, discountAmount, shippingCharges);
 
     db.prepare('DELETE FROM invoice_items WHERE invoice_id = ?').run(id);
-    const stmt = db.prepare('INSERT INTO invoice_items (invoice_id, title, description, quantity, unit_price, amount, order_index) VALUES (?, ?, ?, ?, ?, ?, ?)');
-    data.items.forEach((item, idx) => stmt.run(id, item.title, item.description, item.quantity, item.unit_price, item.amount, idx));
+    const stmt = db.prepare(
+      'INSERT INTO invoice_items (invoice_id, title, description, quantity, unit_price, amount, order_index, hsn_sac, unit) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    );
+    data.items.forEach((item, idx) =>
+      stmt.run(id, item.title, item.description, item.quantity, item.unit_price, item.amount, idx, item.hsn_sac || '', item.unit || '')
+    );
   }
 
   fields.push("updated_at = datetime('now')");
@@ -190,12 +267,28 @@ export async function duplicateInvoice(id: number): Promise<Invoice> {
     client_address: original.client_address,
     client_email: original.client_email,
     client_phone: original.client_phone,
+    client_gst: original.client_gst || '',
     project_name: original.project_name,
+    po_number: original.po_number || '',
+    place_of_supply: original.place_of_supply || '',
+    payment_terms: original.payment_terms || '',
     date: new Date().toISOString().split('T')[0],
     due_date: original.due_date,
     tax_percent: original.tax_percent,
+    discount_percent: original.discount_percent ?? 0,
+    discount_amount: original.discount_amount ?? 0,
+    shipping_charges: original.shipping_charges ?? 0,
+    currency: original.currency || 'INR',
+    bank_account: original.bank_account || '',
+    bank_name: original.bank_name || '',
+    bank_ifsc: original.bank_ifsc || '',
+    bank_holder: original.bank_holder || '',
     notes: original.notes,
-    items: (original.items || []).map(({ title, description, quantity, unit_price, amount, order_index }) => ({ title, description, quantity, unit_price, amount, order_index })),
+    items: (original.items || []).map(({ title, description, quantity, unit_price, amount, order_index, hsn_sac, unit }) => ({
+      title, description, quantity, unit_price, amount, order_index,
+      hsn_sac: hsn_sac || '',
+      unit: unit || '',
+    })),
   };
 
   return createInvoice(data);

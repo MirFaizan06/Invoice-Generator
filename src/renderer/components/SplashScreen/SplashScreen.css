@@ -1,0 +1,96 @@
+.splash-screen {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.5s ease;
+}
+
+.splash-in { opacity: 0; animation: splash-fade-in 0.4s ease forwards; }
+.splash-hold { opacity: 1; }
+.splash-out { animation: splash-fade-out 0.5s ease forwards; }
+
+@keyframes splash-fade-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes splash-fade-out {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(1.03); }
+}
+
+.splash-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.splash-icon {
+  width: 80px;
+  height: 80px;
+  background: var(--color-primary, #2563EB);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 32px rgba(37,99,235,0.4);
+  animation: splash-icon-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes splash-icon-pulse {
+  0%, 100% { box-shadow: 0 8px 32px rgba(37,99,235,0.4); }
+  50%       { box-shadow: 0 8px 48px rgba(37,99,235,0.7); }
+}
+
+.splash-name {
+  font-size: 32px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -1px;
+  font-family: 'Segoe UI', sans-serif;
+  margin-top: 4px;
+}
+
+.splash-tagline {
+  font-size: 13px;
+  color: rgba(255,255,255,0.5);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.splash-bar {
+  width: 160px;
+  height: 3px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-top: 20px;
+}
+
+.splash-bar-fill {
+  height: 100%;
+  background: var(--color-primary, #2563EB);
+  border-radius: 99px;
+  animation: splash-bar-anim 1.6s ease forwards;
+}
+
+@keyframes splash-bar-anim {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+
+.splash-footer {
+  position: absolute;
+  bottom: 24px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.25);
+  letter-spacing: 1px;
+  font-family: 'Segoe UI', sans-serif;
+}

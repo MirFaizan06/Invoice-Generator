@@ -1,7 +1,7 @@
 {
-  "name": "invoice-generator",
+  "name": "invodessk",
   "version": "1.0.0",
-  "description": "Professional offline invoicing and financial tracking application",
+  "description": "Professional offline invoicing system",
   "main": "dist/main/index.js",
   "author": {
     "name": "Mir Faizan",
@@ -42,8 +42,8 @@
     "wait-on": "^7.2.0"
   },
   "build": {
-    "appId": "com.techbytesdesign.invoicegenerator",
-    "productName": "InvoiceGenerator",
+    "appId": "com.techbytesdesign.invodessk",
+    "productName": "InvoDesk",
     "copyright": "Copyright © 2026 Tech Bytes Design",
     "directories": {
       "output": "dist-app",
@@ -59,15 +59,16 @@
     ],
     "win": {
       "target": "nsis",
-      "icon": "build/icon.ico"
+      "icon": "build/icon.ico",
+      "artifactName": "InvoDesk-Setup.exe"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "allowElevation": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "InvoiceGenerator",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
       "license": "build/LICENSE.txt"
     },
     "mac": {

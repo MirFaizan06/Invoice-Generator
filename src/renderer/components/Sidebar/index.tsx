@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, FilePlus, FileText, TrendingUp, Settings, Building2, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, FilePlus, FileText, TrendingUp, Settings, Building2, ChevronRight, Code2 } from 'lucide-react';
 import { useBusinessStore } from '../../store/business.store';
 import './Sidebar.css';
 
@@ -22,8 +22,8 @@ export const Sidebar: React.FC = () => {
           <FileText size={18} color="#fff" />
         </div>
         <div>
-          <div className="sidebar-logo-title">Invoice</div>
-          <div className="sidebar-logo-subtitle">Generator</div>
+          <div className="sidebar-logo-title">InvoDesk</div>
+          <div className="sidebar-logo-subtitle">by Tech Bytes Design</div>
         </div>
       </div>
 
@@ -38,11 +38,23 @@ export const Sidebar: React.FC = () => {
             </NavLink>
           ))}
         </div>
+
+        <div className="sidebar-nav-section" style={{ marginTop: 'auto', paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          <NavLink to="/developer" className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`} style={{ opacity: 0.7 }}>
+            <span className="sidebar-nav-item-icon"><Code2 size={17} /></span>
+            <span className="sidebar-nav-item-text">Developer</span>
+            <ChevronRight size={13} className="sidebar-nav-item-arrow" />
+          </NavLink>
+        </div>
       </nav>
 
       <div className="sidebar-business">
         <div className="sidebar-business-icon">
-          <Building2 size={14} />
+          {activeBusiness?.logo_path ? (
+            <img src={`file://${activeBusiness.logo_path}`} alt="logo" style={{ width: 20, height: 20, objectFit: 'contain', borderRadius: 3 }} />
+          ) : (
+            <Building2 size={14} />
+          )}
         </div>
         <div className="sidebar-business-info">
           <div className="sidebar-business-name">{activeBusiness?.name || 'No Business'}</div>

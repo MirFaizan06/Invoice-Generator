@@ -7,7 +7,7 @@ export const AppPaths = {
     return app.getPath('userData');
   },
   get database() {
-    return path.join(this.userData, 'invoicegenerator.db');
+    return path.join(this.userData, 'invodessk.db');
   },
   get invoicesDir() {
     return path.join(this.userData, 'invoices');
@@ -18,10 +18,13 @@ export const AppPaths = {
   get pdfDir() {
     return path.join(this.invoicesDir, 'pdf');
   },
+  get logosDir() {
+    return path.join(this.userData, 'logos');
+  },
 };
 
 export function ensureDirectories(): void {
-  [AppPaths.invoicesDir, AppPaths.htmlDir, AppPaths.pdfDir].forEach((dir) => {
+  [AppPaths.invoicesDir, AppPaths.htmlDir, AppPaths.pdfDir, AppPaths.logosDir].forEach((dir) => {
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }

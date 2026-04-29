@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileText, Building2, CreditCard, CheckCircle, ChevronRight, ChevronLeft } from 'lucide-react';
+import { FileText, Building2, CreditCard, CheckCircle, ChevronRight, ChevronLeft, Layout } from 'lucide-react';
 import { Button } from '../../components/UI/Button';
 import { Input } from '../../components/UI/Input';
 import { useAppStore } from '../../store/app.store';
@@ -22,14 +22,30 @@ interface FormData {
   default_tax: string;
   upi_label: string;
   upi_id: string;
+  upi_name: string;
+  template_id: string;
 }
+
+const TEMPLATES = [
+  { id: 'modern-blue', name: 'Modern Blue', description: 'Clean blue accents, professional', colors: ['#2563EB', '#1E293B', '#F8FAFF'] },
+  { id: 'minimal-white', name: 'Minimal White', description: 'Pure minimal, no colors', colors: ['#ffffff', '#9CA3AF', '#F9FAFB'] },
+  { id: 'dark-corporate', name: 'Dark Corporate', description: 'Dark navy, bold presence', colors: ['#0F172A', '#3B82F6', '#ffffff'] },
+  { id: 'forest-green', name: 'Forest Green', description: 'Fresh green, natural feel', colors: ['#166534', '#16A34A', '#F0FDF4'] },
+  { id: 'classic-serif', name: 'Classic Serif', description: 'Traditional, serif fonts', colors: ['#111827', '#374151', '#ffffff'] },
+  { id: 'executive-gold', name: 'Executive Gold', description: 'Navy & gold, premium look', colors: ['#1E3A5F', '#D4A017', '#ffffff'] },
+  { id: 'tech-purple', name: 'Tech Purple', description: 'Purple gradient, modern tech', colors: ['#4F46E5', '#7C3AED', '#ffffff'] },
+  { id: 'warm-amber', name: 'Warm Amber', description: 'Warm amber, creative freelancer', colors: ['#D97706', '#F59E0B', '#FFFBEB'] },
+  { id: 'pastel-creative', name: 'Pastel Creative', description: 'Soft pastels, creative studio', colors: ['#7C3AED', '#EC4899', '#FAF5FF'] },
+  { id: 'monochrome', name: 'Monochrome', description: 'Black & white, minimal print', colors: ['#000000', '#374151', '#ffffff'] },
+];
 
 const steps = [
   { id: 0, title: 'Welcome', icon: <FileText size={24} /> },
   { id: 1, title: 'Your Profile', icon: <FileText size={24} /> },
   { id: 2, title: 'Business Details', icon: <Building2 size={24} /> },
   { id: 3, title: 'Payment Setup', icon: <CreditCard size={24} /> },
-  { id: 4, title: 'Complete', icon: <CheckCircle size={24} /> },
+  { id: 4, title: 'Template', icon: <Layout size={24} /> },
+  { id: 5, title: 'Complete', icon: <CheckCircle size={24} /> },
 ];
 
 export const OnboardingPage: React.FC<OnboardingProps> = ({ onComplete }) => {
@@ -52,6 +68,8 @@ export const OnboardingPage: React.FC<OnboardingProps> = ({ onComplete }) => {
     default_tax: '18',
     upi_label: 'Primary UPI',
     upi_id: '',
+    upi_name: '',
+    template_id: 'modern-blue',
   });
 
   const update = (field: keyof FormData, value: string) => {
@@ -81,6 +99,16 @@ export const OnboardingPage: React.FC<OnboardingProps> = ({ onComplete }) => {
     setStep((s) => Math.max(s - 1, 0));
   };
 
+  const handleParseUpi = async () => {
+    if (!form.upi_id.trim()) return;
+    try {
+      const result = await window.electronAPI.upi.parseUpiId(form.upi_id);
+      if (result.suggested_name && !form.upi_name) {
+        setForm((f) => ({ ...f, upi_name: result.suggested_name }));
+      }
+    } catch {}
+  };
+
   const finish = async () => {
     setLoading(true);
     try {
@@ -95,6 +123,7 @@ export const OnboardingPage: React.FC<OnboardingProps> = ({ onComplete }) => {
         cin: form.cin,
         invoice_prefix: form.invoice_prefix || 'TBD/INV',
         default_tax: parseFloat(form.default_tax) || 18,
+        template_id: form.template_id,
       });
 
       if (form.upi_id.trim()) {
@@ -102,6 +131,7 @@ export const OnboardingPage: React.FC<OnboardingProps> = ({ onComplete }) => {
           business_id: business.id,
           label: form.upi_label || 'Primary UPI',
           upi_id: form.upi_id.trim(),
+          upi_name: form.upi_name.trim(),
           is_primary: true,
         });
       }
@@ -116,7 +146,7 @@ export const OnboardingPage: React.FC<OnboardingProps> = ({ onComplete }) => {
     }
   };
 
-  const progress = ((step) / (steps.length - 1)) * 100;
+  const progress = (step / (steps.length - 1)) * 100;
 
   return (
     <div className="onboarding">
@@ -125,7 +155,7 @@ export const OnboardingPage: React.FC<OnboardingProps> = ({ onComplete }) => {
           <div className="onboarding-brand-icon">
             <FileText size={28} color="#fff" />
           </div>
-          <div className="onboarding-brand-name">InvoiceGenerator</div>
+          <div className="onboarding-brand-name">InvoDesk</div>
           <div className="onboarding-brand-tagline">Professional invoicing for modern businesses</div>
         </div>
 
@@ -157,17 +187,17 @@ export const OnboardingPage: React.FC<OnboardingProps> = ({ onComplete }) => {
               <div className="onboarding-welcome-icon">
                 <FileText size={40} />
               </div>
-              <h1 className="onboarding-title">Welcome to InvoiceGenerator</h1>
+              <h1 className="onboarding-title">Welcome to InvoDesk</h1>
               <p className="onboarding-desc">
-                Your professional invoicing solution. Let's set up your business profile in just a few steps.
-                It takes less than 2 minutes.
+                Your professional invoicing solution. Set up your business profile in just a few steps. It takes less than 2 minutes.
               </p>
               <div className="onboarding-features">
                 {[
-                  'Generate professional PDF invoices',
-                  'Track revenue and expenses',
+                  'Generate professional PDF invoices with 10 templates',
+                  'Track revenue and expenses with analytics',
                   'UPI QR code payment support',
                   'Multi-business profile support',
+                  'Client address book for quick invoicing',
                   '100% offline — your data stays local',
                 ].map((f) => (
                   <div key={f} className="onboarding-feature">
@@ -184,9 +214,9 @@ export const OnboardingPage: React.FC<OnboardingProps> = ({ onComplete }) => {
               <h1 className="onboarding-title">Your Profile</h1>
               <p className="onboarding-desc">Tell us about yourself and your business.</p>
               <div className="onboarding-form">
-                <Input label="Your Full Name" placeholder="Mir Faizan" value={form.owner_name} onChange={(e) => update('owner_name', e.target.value)} error={errors.owner_name} />
-                <Input label="Business Name" placeholder="Tech Bytes Design" value={form.name} onChange={(e) => update('name', e.target.value)} error={errors.name} />
-                <Input label="Business Email" type="email" placeholder="techbytesdesign@gmail.com" value={form.email} onChange={(e) => update('email', e.target.value)} error={errors.email} />
+                <Input label="Your Full Name" placeholder="Mir Faizan" value={form.owner_name} onChange={(e) => update('owner_name', e.target.value)} error={errors.owner_name} required />
+                <Input label="Business Name" placeholder="Tech Bytes Design" value={form.name} onChange={(e) => update('name', e.target.value)} error={errors.name} required />
+                <Input label="Business Email" type="email" placeholder="techbytesdesign@gmail.com" value={form.email} onChange={(e) => update('email', e.target.value)} error={errors.email} required />
                 <Input label="Phone Number" type="tel" placeholder="+91 98765 43210" value={form.phone} onChange={(e) => update('phone', e.target.value)} />
               </div>
             </div>
@@ -213,8 +243,24 @@ export const OnboardingPage: React.FC<OnboardingProps> = ({ onComplete }) => {
               <h1 className="onboarding-title">Payment Setup</h1>
               <p className="onboarding-desc">Add a UPI ID to generate QR codes on invoices. You can skip this.</p>
               <div className="onboarding-form">
-                <Input label="UPI ID" placeholder="yourname@upi" value={form.upi_id} onChange={(e) => update('upi_id', e.target.value)} hint="e.g. techbytes@okaxis" />
-                <Input label="UPI Label" placeholder="Primary UPI" value={form.upi_label} onChange={(e) => update('upi_label', e.target.value)} hint="A name for this UPI ID" />
+                <div style={{ position: 'relative' }}>
+                  <Input
+                    label="UPI ID"
+                    placeholder="yourname@upi"
+                    value={form.upi_id}
+                    onChange={(e) => update('upi_id', e.target.value)}
+                    onBlur={handleParseUpi}
+                    hint="e.g. techbytes@okaxis — we'll suggest a display name"
+                  />
+                </div>
+                <Input
+                  label="UPI Display Name"
+                  placeholder="John Doe"
+                  value={form.upi_name}
+                  onChange={(e) => update('upi_name', e.target.value)}
+                  hint="Name shown on receiver's UPI app (GPay, PhonePe, etc.)"
+                />
+                <Input label="UPI Label" placeholder="Primary UPI" value={form.upi_label} onChange={(e) => update('upi_label', e.target.value)} hint="A short label for this UPI ID" />
               </div>
               <div className="onboarding-upi-info">
                 <CreditCard size={14} />
@@ -224,6 +270,46 @@ export const OnboardingPage: React.FC<OnboardingProps> = ({ onComplete }) => {
           )}
 
           {step === 4 && (
+            <div className="onboarding-step-content">
+              <h1 className="onboarding-title">Choose Invoice Template</h1>
+              <p className="onboarding-desc">Select a design for your invoices. You can change this anytime in Settings.</p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', marginTop: '16px', maxHeight: '340px', overflowY: 'auto', paddingRight: '4px' }}>
+                {TEMPLATES.map((t) => {
+                  const selected = form.template_id === t.id;
+                  return (
+                    <div
+                      key={t.id}
+                      onClick={() => update('template_id', t.id)}
+                      style={{
+                        border: selected ? '2px solid var(--color-primary)' : '2px solid var(--color-border)',
+                        borderRadius: '10px',
+                        padding: '12px',
+                        cursor: 'pointer',
+                        background: selected ? 'var(--color-primary-light, #EFF6FF)' : '#fff',
+                        position: 'relative',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      {selected && (
+                        <div style={{ position: 'absolute', top: '8px', right: '8px', background: 'var(--color-primary)', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <CheckCircle size={12} color="#fff" />
+                        </div>
+                      )}
+                      <div style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>
+                        {t.colors.map((c, i) => (
+                          <div key={i} style={{ width: i === 0 ? '28px' : '14px', height: '28px', borderRadius: '4px', background: c, border: '1px solid rgba(0,0,0,0.08)', flexShrink: 0 }} />
+                        ))}
+                      </div>
+                      <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-text)', marginBottom: '2px' }}>{t.name}</div>
+                      <div style={{ fontSize: '10px', color: 'var(--color-text-muted)', lineHeight: 1.4 }}>{t.description}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {step === 5 && (
             <div className="onboarding-step-content">
               <div className="onboarding-complete-icon">
                 <CheckCircle size={48} />
@@ -255,6 +341,10 @@ export const OnboardingPage: React.FC<OnboardingProps> = ({ onComplete }) => {
                     <strong>{form.upi_id}</strong>
                   </div>
                 )}
+                <div className="onboarding-summary-row">
+                  <span>Template</span>
+                  <strong>{TEMPLATES.find((t) => t.id === form.template_id)?.name || 'Modern Blue'}</strong>
+                </div>
               </div>
             </div>
           )}

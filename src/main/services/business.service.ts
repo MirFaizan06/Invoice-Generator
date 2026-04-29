@@ -1,4 +1,7 @@
+import fs from 'fs';
+import path from 'path';
 import { getDB } from '../database/index';
+import { AppPaths } from '../utils/paths';
 import type { Business, CreateBusinessData } from '../../shared/types';
 
 type DBBusiness = Omit<Business, 'is_active'> & { is_active: number };
@@ -28,8 +31,8 @@ export function createBusiness(data: CreateBusinessData): Business {
   const isFirst = hasAny.count === 0;
 
   const result = db.prepare(`
-    INSERT INTO businesses (name, owner_name, address, phone, email, gst, pan, cin, invoice_prefix, default_tax, is_active)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO businesses (name, owner_name, address, phone, email, gst, pan, cin, invoice_prefix, default_tax, is_active, logo_path, template_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     data.name,
     data.owner_name,
@@ -41,7 +44,9 @@ export function createBusiness(data: CreateBusinessData): Business {
     data.cin || '',
     data.invoice_prefix || 'TBD/INV',
     data.default_tax ?? 18,
-    isFirst ? 1 : 0
+    isFirst ? 1 : 0,
+    data.logo_path || '',
+    data.template_id || 'modern-blue'
   );
 
   return getBusinessById(result.lastInsertRowid as number)!;
@@ -61,6 +66,8 @@ export function updateBusiness(id: number, data: Partial<CreateBusinessData>): B
   if (data.cin !== undefined) { fields.push('cin = ?'); values.push(data.cin); }
   if (data.invoice_prefix !== undefined) { fields.push('invoice_prefix = ?'); values.push(data.invoice_prefix); }
   if (data.default_tax !== undefined) { fields.push('default_tax = ?'); values.push(data.default_tax); }
+  if (data.logo_path !== undefined) { fields.push('logo_path = ?'); values.push(data.logo_path); }
+  if (data.template_id !== undefined) { fields.push('template_id = ?'); values.push(data.template_id); }
 
   fields.push("updated_at = datetime('now')");
   values.push(id);
@@ -88,4 +95,14 @@ export function setActiveBusiness(id: number): void {
   const db = getDB();
   db.prepare('UPDATE businesses SET is_active = 0').run();
   db.prepare('UPDATE businesses SET is_active = 1 WHERE id = ?').run(id);
+}
+
+export function saveBusinessLogo(businessId: number, srcPath: string): string {
+  const ext = path.extname(srcPath) || '.png';
+  const destFileName = `business_${businessId}${ext}`;
+  const destPath = path.join(AppPaths.logosDir, destFileName);
+
+  fs.copyFileSync(srcPath, destPath);
+  updateBusiness(businessId, { logo_path: destPath });
+  return destPath;
 }

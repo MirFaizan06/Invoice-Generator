@@ -116,6 +116,10 @@ export async function initializeDatabase(): Promise<void> {
   dbInstance.persist();
 }
 
+function addColumnSafe(db: SQLiteWrapper, table: string, column: string, definition: string): void {
+  try { db.db.run(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`); } catch {}
+}
+
 function runMigrations(db: SQLiteWrapper): void {
   db.db.exec(`
     CREATE TABLE IF NOT EXISTS businesses (
@@ -206,5 +210,51 @@ function runMigrations(db: SQLiteWrapper): void {
       key TEXT PRIMARY KEY,
       value TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS auth (
+      id INTEGER PRIMARY KEY,
+      password_hash TEXT NOT NULL,
+      hint TEXT DEFAULT '',
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS saved_clients (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      business_id INTEGER NOT NULL,
+      name TEXT NOT NULL,
+      email TEXT DEFAULT '',
+      phone TEXT DEFAULT '',
+      address TEXT DEFAULT '',
+      gst TEXT DEFAULT '',
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
+    );
   `);
+
+  // businesses new columns
+  addColumnSafe(db, 'businesses', 'logo_path', "TEXT DEFAULT ''");
+  addColumnSafe(db, 'businesses', 'template_id', "TEXT DEFAULT 'modern-blue'");
+
+  // upi_ids new columns
+  addColumnSafe(db, 'upi_ids', 'upi_name', "TEXT DEFAULT ''");
+
+  // invoices new columns
+  addColumnSafe(db, 'invoices', 'po_number', "TEXT DEFAULT ''");
+  addColumnSafe(db, 'invoices', 'client_gst', "TEXT DEFAULT ''");
+  addColumnSafe(db, 'invoices', 'place_of_supply', "TEXT DEFAULT ''");
+  addColumnSafe(db, 'invoices', 'payment_terms', "TEXT DEFAULT ''");
+  addColumnSafe(db, 'invoices', 'bank_account', "TEXT DEFAULT ''");
+  addColumnSafe(db, 'invoices', 'bank_name', "TEXT DEFAULT ''");
+  addColumnSafe(db, 'invoices', 'bank_ifsc', "TEXT DEFAULT ''");
+  addColumnSafe(db, 'invoices', 'bank_holder', "TEXT DEFAULT ''");
+  addColumnSafe(db, 'invoices', 'discount_percent', 'REAL DEFAULT 0');
+  addColumnSafe(db, 'invoices', 'discount_amount', 'REAL DEFAULT 0');
+  addColumnSafe(db, 'invoices', 'shipping_charges', 'REAL DEFAULT 0');
+  addColumnSafe(db, 'invoices', 'currency', "TEXT DEFAULT 'INR'");
+
+  // invoice_items new columns
+  addColumnSafe(db, 'invoice_items', 'hsn_sac', "TEXT DEFAULT ''");
+  addColumnSafe(db, 'invoice_items', 'unit', "TEXT DEFAULT ''");
 }

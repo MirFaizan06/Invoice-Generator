@@ -6,12 +6,15 @@ import { Input } from '../../components/UI/Input';
 import { Badge } from '../../components/UI/Badge';
 import { Modal } from '../../components/UI/Modal';
 import { useAppStore } from '../../store/app.store';
+import { useBusinessStore } from '../../store/business.store';
 import type { Invoice } from '@shared/types';
 import './History.css';
 
 export const HistoryPage: React.FC = () => {
   const navigate = useNavigate();
   const addToast = useAppStore((s) => s.addToast);
+  const { businesses } = useBusinessStore();
+  const getBusinessName = (id: number) => businesses.find((b) => b.id === id)?.name || '—';
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -129,6 +132,7 @@ export const HistoryPage: React.FC = () => {
             <thead>
               <tr>
                 <th>Invoice #</th>
+                <th>Business</th>
                 <th>Client</th>
                 <th>Project</th>
                 <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => toggleSort('date')}>
@@ -149,6 +153,7 @@ export const HistoryPage: React.FC = () => {
                       {inv.invoice_number}
                     </span>
                   </td>
+                  <td style={{ color: 'var(--color-text-secondary)', fontSize: 12, whiteSpace: 'nowrap' }}>{getBusinessName(inv.business_id)}</td>
                   <td style={{ fontWeight: 500 }}>{inv.client_name}</td>
                   <td style={{ color: 'var(--color-text-secondary)', maxWidth: 180 }} className="truncate">{inv.project_name}</td>
                   <td style={{ color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>{new Date(inv.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' })}</td>

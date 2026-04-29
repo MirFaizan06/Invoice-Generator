@@ -11,6 +11,8 @@ export interface Business {
   invoice_prefix: string;
   default_tax: number;
   is_active: boolean;
+  logo_path: string;
+  template_id: string;
   created_at: string;
   updated_at: string;
 }
@@ -20,6 +22,7 @@ export interface UpiId {
   business_id: number;
   label: string;
   upi_id: string;
+  upi_name: string;
   is_primary: boolean;
 }
 
@@ -32,6 +35,8 @@ export interface InvoiceItem {
   unit_price: number;
   amount: number;
   order_index: number;
+  hsn_sac: string;
+  unit: string;
 }
 
 export interface Invoice {
@@ -42,15 +47,27 @@ export interface Invoice {
   client_address: string;
   client_email: string;
   client_phone: string;
+  client_gst: string;
   project_name: string;
+  po_number: string;
+  place_of_supply: string;
+  payment_terms: string;
   date: string;
   due_date: string;
   subtotal: number;
+  discount_percent: number;
+  discount_amount: number;
+  shipping_charges: number;
   tax_percent: number;
   tax_amount: number;
   total: number;
+  currency: string;
+  bank_account: string;
+  bank_name: string;
+  bank_ifsc: string;
+  bank_holder: string;
   notes: string;
-  status: 'unpaid' | 'paid' | 'cancelled';
+  status: 'draft' | 'unpaid' | 'paid' | 'cancelled';
   html_path: string;
   pdf_path: string;
   items?: InvoiceItem[];
@@ -62,6 +79,7 @@ export interface Transaction {
   id: number;
   invoice_id: number | null;
   business_id: number;
+  business_name?: string;
   type: 'revenue' | 'expense';
   amount: number;
   description: string;
@@ -88,7 +106,8 @@ export interface FinanceSummary {
 
 export interface InvoiceFilters {
   search?: string;
-  status?: 'all' | 'paid' | 'unpaid' | 'cancelled';
+  status?: 'all' | 'draft' | 'paid' | 'unpaid' | 'cancelled';
+  business_id?: number;
   dateFrom?: string;
   dateTo?: string;
   sortBy?: 'date' | 'amount' | 'client';
@@ -101,10 +120,22 @@ export interface CreateInvoiceData {
   client_address: string;
   client_email: string;
   client_phone: string;
+  client_gst: string;
   project_name: string;
+  po_number: string;
+  place_of_supply: string;
+  payment_terms: string;
   date: string;
   due_date: string;
   tax_percent: number;
+  discount_percent: number;
+  discount_amount: number;
+  shipping_charges: number;
+  currency: string;
+  bank_account: string;
+  bank_name: string;
+  bank_ifsc: string;
+  bank_holder: string;
   notes: string;
   items: Omit<InvoiceItem, 'id' | 'invoice_id'>[];
 }
@@ -120,6 +151,25 @@ export interface CreateBusinessData {
   cin: string;
   invoice_prefix: string;
   default_tax: number;
+  logo_path?: string;
+  template_id?: string;
+}
+
+export interface SavedClient {
+  id: number;
+  business_id: number;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  gst: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AuthData {
+  password_hash: string;
+  hint: string;
 }
 
 export interface AddExpenseData {
@@ -137,6 +187,7 @@ export interface ElectronAPI {
     update: (id: number, data: Partial<CreateBusinessData>) => Promise<Business>;
     delete: (id: number) => Promise<void>;
     setActive: (id: number) => Promise<void>;
+    saveLogo: (businessId: number, srcPath: string) => Promise<string>;
   };
   invoice: {
     getAll: (filters?: InvoiceFilters) => Promise<Invoice[]>;
@@ -152,7 +203,7 @@ export interface ElectronAPI {
   };
   finance: {
     getSummary: (year?: number) => Promise<FinanceSummary>;
-    getTransactions: (filters?: { type?: string; year?: number; month?: number }) => Promise<Transaction[]>;
+    getTransactions: (filters?: { type?: string; year?: number; month?: number; business_id?: number }) => Promise<Transaction[]>;
     addExpense: (data: AddExpenseData) => Promise<Transaction>;
     deleteTransaction: (id: number) => Promise<void>;
   };
@@ -167,11 +218,27 @@ export interface ElectronAPI {
     update: (id: number, data: Partial<Omit<UpiId, 'id'>>) => Promise<UpiId>;
     delete: (id: number) => Promise<void>;
     generateQR: (upiId: string, amount: number, name: string, invoiceNumber: string) => Promise<string>;
+    parseUpiId: (upiId: string) => Promise<{ suggested_name: string; vpa: string; bank: string }>;
+  };
+  auth: {
+    isSetup: () => Promise<boolean>;
+    setup: (password: string, hint: string) => Promise<void>;
+    verify: (password: string) => Promise<boolean>;
+    changePassword: (oldPassword: string, newPassword: string) => Promise<boolean>;
+    getHint: () => Promise<string>;
+    reset: () => Promise<void>;
+  };
+  clients: {
+    getForBusiness: (businessId: number) => Promise<SavedClient[]>;
+    save: (data: Omit<SavedClient, 'id' | 'created_at' | 'updated_at'>) => Promise<SavedClient>;
+    update: (id: number, data: Partial<Omit<SavedClient, 'id' | 'created_at' | 'updated_at'>>) => Promise<SavedClient>;
+    delete: (id: number) => Promise<void>;
   };
   shell: {
     openPath: (filePath: string) => Promise<void>;
     showInFolder: (filePath: string) => Promise<void>;
     readFile: (filePath: string) => Promise<string | null>;
+    pickFile: (options: { title?: string; filters?: Array<{ name: string; extensions: string[] }> }) => Promise<string | null>;
   };
   window: {
     minimize: () => Promise<void>;

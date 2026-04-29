@@ -176,6 +176,7 @@ export const FinancePage: React.FC = () => {
               <thead>
                 <tr>
                   <th>Date</th>
+                  <th>Business</th>
                   <th>Description</th>
                   <th>Type</th>
                   <th className="text-right">Amount</th>
@@ -186,6 +187,7 @@ export const FinancePage: React.FC = () => {
                 {transactions.map((t) => (
                   <tr key={t.id}>
                     <td style={{ whiteSpace: 'nowrap', color: 'var(--color-text-muted)' }}>{new Date(t.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' })}</td>
+                    <td style={{ fontSize: 12, color: 'var(--color-text-secondary)', whiteSpace: 'nowrap' }}>{t.business_name || '—'}</td>
                     <td>{t.description}</td>
                     <td>
                       <Badge variant={t.type === 'revenue' ? 'success' : 'danger'} dot>

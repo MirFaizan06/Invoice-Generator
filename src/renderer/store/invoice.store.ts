@@ -6,10 +6,22 @@ interface DraftInvoice {
   client_address: string;
   client_email: string;
   client_phone: string;
+  client_gst: string;
   project_name: string;
+  po_number: string;
+  place_of_supply: string;
+  payment_terms: string;
   date: string;
   due_date: string;
   tax_percent: number;
+  discount_percent: number;
+  discount_amount: number;
+  shipping_charges: number;
+  currency: string;
+  bank_account: string;
+  bank_name: string;
+  bank_ifsc: string;
+  bank_holder: string;
   notes: string;
   items: Omit<InvoiceItem, 'id' | 'invoice_id'>[];
 }
@@ -32,6 +44,8 @@ const defaultItem = (): Omit<InvoiceItem, 'id' | 'invoice_id'> => ({
   unit_price: 0,
   amount: 0,
   order_index: 0,
+  hsn_sac: '',
+  unit: '',
 });
 
 const defaultDraft = (): DraftInvoice => ({
@@ -39,10 +53,22 @@ const defaultDraft = (): DraftInvoice => ({
   client_address: '',
   client_email: '',
   client_phone: '',
+  client_gst: '',
   project_name: '',
+  po_number: '',
+  place_of_supply: '',
+  payment_terms: '',
   date: new Date().toISOString().split('T')[0],
   due_date: '',
   tax_percent: 18,
+  discount_percent: 0,
+  discount_amount: 0,
+  shipping_charges: 0,
+  currency: 'INR',
+  bank_account: '',
+  bank_name: '',
+  bank_ifsc: '',
+  bank_holder: '',
   notes: '',
   items: [defaultItem()],
 });

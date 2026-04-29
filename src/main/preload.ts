@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     update: (id: number, data: unknown) => ipcRenderer.invoke('business:update', id, data),
     delete: (id: number) => ipcRenderer.invoke('business:delete', id),
     setActive: (id: number) => ipcRenderer.invoke('business:setActive', id),
+    saveLogo: (businessId: number, srcPath: string) => ipcRenderer.invoke('business:saveLogo', businessId, srcPath),
   },
   invoice: {
     getAll: (filters?: unknown) => ipcRenderer.invoke('invoice:getAll', filters),
@@ -39,11 +40,27 @@ contextBridge.exposeInMainWorld('electronAPI', {
     delete: (id: number) => ipcRenderer.invoke('upi:delete', id),
     generateQR: (upiId: string, amount: number, name: string, invoiceNumber: string) =>
       ipcRenderer.invoke('upi:generateQR', upiId, amount, name, invoiceNumber),
+    parseUpiId: (upiId: string) => ipcRenderer.invoke('upi:parseUpiId', upiId),
+  },
+  auth: {
+    isSetup: () => ipcRenderer.invoke('auth:isSetup'),
+    setup: (password: string, hint: string) => ipcRenderer.invoke('auth:setup', password, hint),
+    verify: (password: string) => ipcRenderer.invoke('auth:verify', password),
+    changePassword: (oldPassword: string, newPassword: string) => ipcRenderer.invoke('auth:changePassword', oldPassword, newPassword),
+    getHint: () => ipcRenderer.invoke('auth:getHint'),
+    reset: () => ipcRenderer.invoke('auth:reset'),
+  },
+  clients: {
+    getForBusiness: (businessId: number) => ipcRenderer.invoke('clients:getForBusiness', businessId),
+    save: (data: unknown) => ipcRenderer.invoke('clients:save', data),
+    update: (id: number, data: unknown) => ipcRenderer.invoke('clients:update', id, data),
+    delete: (id: number) => ipcRenderer.invoke('clients:delete', id),
   },
   shell: {
     openPath: (filePath: string) => ipcRenderer.invoke('shell:openPath', filePath),
     showInFolder: (filePath: string) => ipcRenderer.invoke('shell:showInFolder', filePath),
     readFile: (filePath: string) => ipcRenderer.invoke('shell:readFile', filePath),
+    pickFile: (options: unknown) => ipcRenderer.invoke('shell:pickFile', options),
   },
   window: {
     minimize: () => ipcRenderer.invoke('window:minimize'),

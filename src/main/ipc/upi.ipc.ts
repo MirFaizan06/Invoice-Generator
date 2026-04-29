@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron';
-import { getUpiForBusiness, addUpiId, updateUpiId, deleteUpiId } from '../services/upi.service';
+import { getUpiForBusiness, addUpiId, updateUpiId, deleteUpiId, parseUpiId } from '../services/upi.service';
 import { generateQRCode } from '../services/qr.service';
 
 export function registerUpiIPC(): void {
@@ -11,4 +11,5 @@ export function registerUpiIPC(): void {
     const upiString = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(name)}&am=${amount}&cu=INR&tn=${encodeURIComponent(invoiceNumber)}`;
     return generateQRCode(upiString);
   });
+  ipcMain.handle('upi:parseUpiId', (_, upiId: string) => parseUpiId(upiId));
 }

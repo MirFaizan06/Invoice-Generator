@@ -1,22 +1,34 @@
 import { getDB } from '../database/index';
 import type { Transaction, FinanceSummary, AddExpenseData } from '../../shared/types';
 
-export function getTransactions(filters: { type?: string; year?: number; month?: number } = {}): Transaction[] {
-  let query = 'SELECT * FROM transactions WHERE 1=1';
+export function getTransactions(filters: { type?: string; year?: number; month?: number; business_id?: number } = {}): Transaction[] {
+  let query = `
+    SELECT t.*, b.name as business_name
+    FROM transactions t
+    LEFT JOIN businesses b ON t.business_id = b.id
+    WHERE 1=1
+  `;
   const params: unknown[] = [];
 
-  if (filters.type) { query += ' AND type = ?'; params.push(filters.type); }
-  if (filters.year) { query += " AND strftime('%Y', date) = ?"; params.push(String(filters.year)); }
-  if (filters.month) { query += " AND strftime('%m', date) = ?"; params.push(String(filters.month).padStart(2, '0')); }
+  if (filters.type) { query += ' AND t.type = ?'; params.push(filters.type); }
+  if (filters.year) { query += " AND strftime('%Y', t.date) = ?"; params.push(String(filters.year)); }
+  if (filters.month) { query += " AND strftime('%m', t.date) = ?"; params.push(String(filters.month).padStart(2, '0')); }
+  if (filters.business_id) { query += ' AND t.business_id = ?'; params.push(filters.business_id); }
 
-  query += ' ORDER BY date DESC, created_at DESC';
+  query += ' ORDER BY t.date DESC, t.created_at DESC';
   return getDB().prepare(query).all(...params) as Transaction[];
 }
 
 export function addExpense(data: AddExpenseData): Transaction {
   const db = getDB();
   const result = db.prepare('INSERT INTO transactions (business_id, type, amount, description, date) VALUES (?, ?, ?, ?, ?)').run(data.business_id, 'expense', data.amount, data.description, data.date);
-  return db.prepare('SELECT * FROM transactions WHERE id = ?').get(result.lastInsertRowid) as Transaction;
+  const row = db.prepare(`
+    SELECT t.*, b.name as business_name
+    FROM transactions t
+    LEFT JOIN businesses b ON t.business_id = b.id
+    WHERE t.id = ?
+  `).get(result.lastInsertRowid) as Transaction;
+  return row;
 }
 
 export function deleteTransaction(id: number): void {

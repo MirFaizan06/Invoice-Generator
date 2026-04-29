@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, shell, dialog } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import { initializeDatabase } from './database/index';
@@ -8,6 +8,8 @@ import { registerInvoiceIPC } from './ipc/invoice.ipc';
 import { registerFinanceIPC } from './ipc/finance.ipc';
 import { registerSettingsIPC } from './ipc/settings.ipc';
 import { registerUpiIPC } from './ipc/upi.ipc';
+import { registerAuthHandlers } from './ipc/auth.ipc';
+import { registerClientHandlers } from './ipc/client.ipc';
 
 const isDev = !app.isPackaged;
 let mainWindow: BrowserWindow | null = null;
@@ -19,6 +21,7 @@ function createWindow(): void {
     minWidth: 1024,
     minHeight: 680,
     frame: false,
+    title: 'InvoDesk',
     backgroundColor: '#F8F9FA',
     webPreferences: {
       nodeIntegration: false,
@@ -56,6 +59,16 @@ function createWindow(): void {
     if (!fs.existsSync(filePath)) return null;
     return fs.readFileSync(filePath, 'utf-8');
   });
+  ipcMain.handle('shell:pickFile', async (_, options: { title?: string; filters?: Array<{ name: string; extensions: string[] }> }) => {
+    if (!mainWindow) return null;
+    const result = await dialog.showOpenDialog(mainWindow, {
+      title: options.title,
+      filters: options.filters,
+      properties: ['openFile'],
+    });
+    if (result.canceled || result.filePaths.length === 0) return null;
+    return result.filePaths[0];
+  });
 }
 
 app.whenReady().then(async () => {
@@ -66,6 +79,8 @@ app.whenReady().then(async () => {
   registerFinanceIPC();
   registerSettingsIPC();
   registerUpiIPC();
+  registerAuthHandlers();
+  registerClientHandlers();
   createWindow();
 
   app.on('activate', () => {

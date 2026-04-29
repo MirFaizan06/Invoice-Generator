@@ -3,34 +3,56 @@ import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { TitleBar } from './components/TitleBar/index';
 import { Layout } from './components/Layout/index';
 import { ToastContainer } from './components/UI/Toast';
+import { SplashScreen } from './components/SplashScreen/index';
 import { useBusinessStore } from './store/business.store';
 import { OnboardingPage } from './pages/Onboarding/index';
+import { AuthPage } from './pages/Auth/index';
 import { DashboardPage } from './pages/Dashboard/index';
 import { CreateInvoicePage } from './pages/CreateInvoice/index';
 import { InvoicePreviewPage } from './pages/InvoicePreview/index';
 import { HistoryPage } from './pages/History/index';
 import { FinancePage } from './pages/Finance/index';
 import { SettingsPage } from './pages/Settings/index';
+import { DeveloperContactPage } from './pages/DeveloperContact/index';
 
-type AppState = 'loading' | 'onboarding' | 'app';
+type AppState = 'splash' | 'loading' | 'auth-setup' | 'auth-login' | 'onboarding' | 'app';
 
 export default function App() {
-  const [appState, setAppState] = useState<AppState>('loading');
+  const [appState, setAppState] = useState<AppState>('splash');
   const fetchAll = useBusinessStore((s) => s.fetchAll);
 
-  useEffect(() => {
-    const init = async () => {
-      const done = await window.electronAPI.settings.get('onboarding_complete');
-      const businesses = await window.electronAPI.business.getAll();
-      if (done === 'true' && businesses.length > 0) {
-        await fetchAll();
-        setAppState('app');
-      } else {
-        setAppState('onboarding');
-      }
-    };
-    init();
-  }, [fetchAll]);
+  const initApp = async () => {
+    setAppState('loading');
+    const done = await window.electronAPI.settings.get('onboarding_complete');
+    const businesses = await window.electronAPI.business.getAll();
+
+    if (!done || businesses.length === 0) {
+      setAppState('onboarding');
+      return;
+    }
+
+    const authSetup = await window.electronAPI.auth.isSetup();
+    if (!authSetup) {
+      setAppState('auth-setup');
+      return;
+    }
+
+    setAppState('auth-login');
+  };
+
+  const onAuthenticated = async () => {
+    await fetchAll();
+    setAppState('app');
+  };
+
+  if (appState === 'splash') {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+        <TitleBar />
+        <SplashScreen onDone={initApp} />
+      </div>
+    );
+  }
 
   if (appState === 'loading') {
     return (
@@ -47,7 +69,30 @@ export default function App() {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
         <TitleBar />
-        <OnboardingPage onComplete={async () => { await fetchAll(); setAppState('app'); }} />
+        <OnboardingPage onComplete={async () => {
+          const authSetup = await window.electronAPI.auth.isSetup();
+          if (!authSetup) { setAppState('auth-setup'); return; }
+          await fetchAll();
+          setAppState('app');
+        }} />
+      </div>
+    );
+  }
+
+  if (appState === 'auth-setup') {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+        <TitleBar />
+        <AuthPage initialView="setup" onAuthenticated={onAuthenticated} />
+      </div>
+    );
+  }
+
+  if (appState === 'auth-login') {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+        <TitleBar />
+        <AuthPage initialView="login" onAuthenticated={onAuthenticated} />
       </div>
     );
   }
@@ -65,6 +110,7 @@ export default function App() {
             <Route path="/history" element={<HistoryPage />} />
             <Route path="/finance" element={<FinancePage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/developer" element={<DeveloperContactPage />} />
           </Route>
         </Routes>
         <ToastContainer />
