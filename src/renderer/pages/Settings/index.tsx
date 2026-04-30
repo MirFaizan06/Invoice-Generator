@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, Check, X, Star, Building2, CreditCard, Sliders, Layout, Lock } from 'lucide-react';
+import { Plus, Trash2, Edit2, Check, X, Star, Building2, CreditCard, Sliders, Layout, Lock, FolderOpen } from 'lucide-react';
+import { PhoneInput } from '../../components/UI/PhoneInput';
 import { Button } from '../../components/UI/Button';
 import { Input } from '../../components/UI/Input';
 import { Modal } from '../../components/UI/Modal';
@@ -21,6 +22,67 @@ const TEMPLATES = [
   { id: 'pastel-creative', name: 'Pastel Creative', description: 'Soft pastels, creative studio', colors: ['#7C3AED', '#EC4899', '#FAF5FF'] },
   { id: 'monochrome', name: 'Monochrome', description: 'Black & white, minimal print', colors: ['#000000', '#374151', '#ffffff'] },
 ];
+
+function PreferencesTab({ activeBusiness }: { activeBusiness: import('@shared/types').Business }) {
+  const [savePath, setSavePath] = useState('');
+  const addToast = useAppStore((s) => s.addToast);
+
+  useEffect(() => {
+    window.electronAPI.settings.get('invoice_save_path').then((v) => setSavePath(v || ''));
+  }, []);
+
+  const pickFolder = async () => {
+    const picked = await window.electronAPI.shell.pickFolder('Choose Invoice Save Folder');
+    if (!picked) return;
+    await window.electronAPI.settings.set('invoice_save_path', picked);
+    setSavePath(picked);
+    addToast({ type: 'success', title: 'Save location updated' });
+  };
+
+  const openFolder = () => {
+    if (savePath) window.electronAPI.shell.openPath(savePath);
+  };
+
+  return (
+    <div>
+      <h3 className="settings-section-title" style={{ marginBottom: 16 }}>Invoice Preferences</h3>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, maxWidth: 480 }}>
+        <Input label="Invoice Prefix" value={activeBusiness.invoice_prefix} hint="e.g. TBD/INV → TBD/INV/2026/0001" readOnly />
+        <Input label="Default Tax %" value={String(activeBusiness.default_tax)} hint="Applied to new invoices" readOnly />
+      </div>
+      <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginTop: 8, marginBottom: 20 }}>Edit these by clicking the edit button on your business profile.</p>
+
+      <h3 className="settings-section-title" style={{ marginBottom: 12 }}>Invoice Save Location</h3>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 520 }}>
+        <div style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '10px 14px' }}>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginBottom: 4 }}>Current location</div>
+          <div style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--font-mono)', color: 'var(--color-text)', wordBreak: 'break-all' }}>
+            {savePath || 'Documents/InvoDesk/Invoices (default)'}
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            onClick={pickFolder}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: 'var(--color-primary-light)', border: '1px solid var(--color-primary-border)', borderRadius: 'var(--radius-md)', color: 'var(--color-primary)', fontWeight: 600, fontSize: 'var(--text-sm)', cursor: 'pointer' }}
+          >
+            <FolderOpen size={14} /> Change Folder
+          </button>
+          {savePath && (
+            <button
+              onClick={openFolder}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', color: 'var(--color-text-secondary)', fontSize: 'var(--text-sm)', cursor: 'pointer' }}
+            >
+              Open Folder
+            </button>
+          )}
+        </div>
+        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
+          Invoices are saved as: <span style={{ fontFamily: 'var(--font-mono)' }}>{savePath || 'Documents/InvoDesk/Invoices'}/Business Name - Invoices/</span>
+        </p>
+      </div>
+    </div>
+  );
+}
 
 export const SettingsPage: React.FC = () => {
   const { businesses, activeBusiness, refresh } = useBusinessStore();
@@ -395,14 +457,7 @@ export const SettingsPage: React.FC = () => {
           )}
 
           {activeTab === 'preferences' && activeBusiness && (
-            <div>
-              <h3 className="settings-section-title" style={{ marginBottom: 16 }}>Invoice Preferences</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, maxWidth: 480 }}>
-                <Input label="Invoice Prefix" value={activeBusiness.invoice_prefix} hint="e.g. TBD/INV → TBD/INV/2026/0001" readOnly />
-                <Input label="Default Tax %" value={String(activeBusiness.default_tax)} hint="Applied to new invoices" readOnly />
-              </div>
-              <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginTop: 12 }}>Edit these by clicking the edit button on your business profile.</p>
-            </div>
+            <PreferencesTab activeBusiness={activeBusiness} />
           )}
         </div>
       </div>
@@ -414,7 +469,7 @@ export const SettingsPage: React.FC = () => {
           <Input label="Business Name" placeholder="Tech Bytes Design" value={bizForm.name} onChange={(e) => setBizForm((f) => ({ ...f, name: e.target.value }))} required />
           <Input label="Owner Name" placeholder="Mir Faizan" value={bizForm.owner_name} onChange={(e) => setBizForm((f) => ({ ...f, owner_name: e.target.value }))} required />
           <Input label="Email" type="email" value={bizForm.email} onChange={(e) => setBizForm((f) => ({ ...f, email: e.target.value }))} />
-          <Input label="Phone" value={bizForm.phone} onChange={(e) => setBizForm((f) => ({ ...f, phone: e.target.value }))} />
+          <PhoneInput label="Phone" value={bizForm.phone} onChange={(v) => setBizForm((f) => ({ ...f, phone: v }))} />
           <div style={{ gridColumn: '1 / -1' }}>
             <Input label="Address" value={bizForm.address} onChange={(e) => setBizForm((f) => ({ ...f, address: e.target.value }))} />
           </div>

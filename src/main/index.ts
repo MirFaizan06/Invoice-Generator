@@ -2,7 +2,7 @@ import { app, BrowserWindow, ipcMain, shell, dialog } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import { initializeDatabase } from './database/index';
-import { ensureDirectories } from './utils/paths';
+import { ensureDirectories, migrateDataIfNeeded } from './utils/paths';
 import { registerBusinessIPC } from './ipc/business.ipc';
 import { registerInvoiceIPC } from './ipc/invoice.ipc';
 import { registerFinanceIPC } from './ipc/finance.ipc';
@@ -69,9 +69,19 @@ function createWindow(): void {
     if (result.canceled || result.filePaths.length === 0) return null;
     return result.filePaths[0];
   });
+  ipcMain.handle('shell:pickFolder', async (_, title?: string) => {
+    if (!mainWindow) return null;
+    const result = await dialog.showOpenDialog(mainWindow, {
+      title: title || 'Select Folder',
+      properties: ['openDirectory', 'createDirectory'],
+    });
+    if (result.canceled || result.filePaths.length === 0) return null;
+    return result.filePaths[0];
+  });
 }
 
 app.whenReady().then(async () => {
+  migrateDataIfNeeded();
   ensureDirectories();
   await initializeDatabase();
   registerBusinessIPC();

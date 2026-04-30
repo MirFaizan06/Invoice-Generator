@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { FileText, Building2, CreditCard, CheckCircle, ChevronRight, ChevronLeft, Layout } from 'lucide-react';
+import { FileText, Building2, CreditCard, CheckCircle, ChevronRight, ChevronLeft, Layout, FolderOpen } from 'lucide-react';
 import { Button } from '../../components/UI/Button';
 import { Input } from '../../components/UI/Input';
+import { PhoneInput } from '../../components/UI/PhoneInput';
 import { useAppStore } from '../../store/app.store';
 import './Onboarding.css';
 
@@ -45,7 +46,8 @@ const steps = [
   { id: 2, title: 'Business Details', icon: <Building2 size={24} /> },
   { id: 3, title: 'Payment Setup', icon: <CreditCard size={24} /> },
   { id: 4, title: 'Template', icon: <Layout size={24} /> },
-  { id: 5, title: 'Complete', icon: <CheckCircle size={24} /> },
+  { id: 5, title: 'Save Location', icon: <FolderOpen size={24} /> },
+  { id: 6, title: 'Complete', icon: <CheckCircle size={24} /> },
 ];
 
 export const OnboardingPage: React.FC<OnboardingProps> = ({ onComplete }) => {
@@ -54,6 +56,9 @@ export const OnboardingPage: React.FC<OnboardingProps> = ({ onComplete }) => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Partial<FormData>>({});
   const addToast = useAppStore((s) => s.addToast);
+
+  const [invoiceSavePath, setInvoiceSavePath] = useState('');
+  const defaultSavePath = 'Documents/InvoDesk/Invoices (default)';
 
   const [form, setForm] = useState<FormData>({
     owner_name: '',
@@ -136,6 +141,9 @@ export const OnboardingPage: React.FC<OnboardingProps> = ({ onComplete }) => {
         });
       }
 
+      if (invoiceSavePath) {
+        await window.electronAPI.settings.set('invoice_save_path', invoiceSavePath);
+      }
       await window.electronAPI.settings.set('onboarding_complete', 'true');
       addToast({ type: 'success', title: 'Setup complete!', message: `Welcome, ${form.owner_name}!` });
       onComplete();
@@ -217,7 +225,7 @@ export const OnboardingPage: React.FC<OnboardingProps> = ({ onComplete }) => {
                 <Input label="Your Full Name" placeholder="Mir Faizan" value={form.owner_name} onChange={(e) => update('owner_name', e.target.value)} error={errors.owner_name} required />
                 <Input label="Business Name" placeholder="Tech Bytes Design" value={form.name} onChange={(e) => update('name', e.target.value)} error={errors.name} required />
                 <Input label="Business Email" type="email" placeholder="techbytesdesign@gmail.com" value={form.email} onChange={(e) => update('email', e.target.value)} error={errors.email} required />
-                <Input label="Phone Number" type="tel" placeholder="+91 98765 43210" value={form.phone} onChange={(e) => update('phone', e.target.value)} />
+                <PhoneInput label="Phone Number" value={form.phone} onChange={(v) => update('phone', v)} />
               </div>
             </div>
           )}
@@ -310,6 +318,36 @@ export const OnboardingPage: React.FC<OnboardingProps> = ({ onComplete }) => {
           )}
 
           {step === 5 && (
+            <div className="onboarding-step-content">
+              <h1 className="onboarding-title">Invoice Save Location</h1>
+              <p className="onboarding-desc">Choose where InvoDesk should save your invoices. Each business gets its own folder.</p>
+              <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', padding: '14px 16px' }}>
+                  <div style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 6 }}>Save Path</div>
+                  <div style={{ fontSize: 'var(--text-sm)', color: invoiceSavePath ? 'var(--color-text)' : 'var(--color-text-muted)', fontFamily: 'var(--font-mono)', wordBreak: 'break-all' }}>
+                    {invoiceSavePath || defaultSavePath}
+                  </div>
+                </div>
+                <button
+                  onClick={async () => {
+                    const picked = await window.electronAPI.shell.pickFolder('Choose Invoice Save Folder');
+                    if (picked) setInvoiceSavePath(picked);
+                  }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: 'var(--color-primary-light)', border: '1px solid var(--color-primary-border)', borderRadius: 'var(--radius-md)', color: 'var(--color-primary)', fontWeight: 600, fontSize: 'var(--text-sm)', cursor: 'pointer', width: 'fit-content' }}
+                >
+                  <FolderOpen size={15} /> Choose Folder
+                </button>
+                <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
+                  Invoices will be saved as:<br />
+                  <span style={{ fontFamily: 'var(--font-mono)' }}>{invoiceSavePath || 'Documents/InvoDesk/Invoices'}/</span><br />
+                  <span style={{ fontFamily: 'var(--font-mono)' }}>  {form.name || 'Your Business'} - Invoices/HTML/</span><br />
+                  <span style={{ fontFamily: 'var(--font-mono)' }}>  {form.name || 'Your Business'} - Invoices/PDF/</span>
+                </p>
+              </div>
+            </div>
+          )}
+
+          {step === 6 && (
             <div className="onboarding-step-content">
               <div className="onboarding-complete-icon">
                 <CheckCircle size={48} />

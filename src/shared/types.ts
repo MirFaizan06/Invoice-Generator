@@ -239,6 +239,7 @@ export interface ElectronAPI {
     showInFolder: (filePath: string) => Promise<void>;
     readFile: (filePath: string) => Promise<string | null>;
     pickFile: (options: { title?: string; filters?: Array<{ name: string; extensions: string[] }> }) => Promise<string | null>;
+    pickFolder: (title?: string) => Promise<string | null>;
   };
   window: {
     minimize: () => Promise<void>;

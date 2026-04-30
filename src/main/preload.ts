@@ -61,6 +61,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     showInFolder: (filePath: string) => ipcRenderer.invoke('shell:showInFolder', filePath),
     readFile: (filePath: string) => ipcRenderer.invoke('shell:readFile', filePath),
     pickFile: (options: unknown) => ipcRenderer.invoke('shell:pickFile', options),
+    pickFolder: (title?: string) => ipcRenderer.invoke('shell:pickFolder', title),
   },
   window: {
     minimize: () => ipcRenderer.invoke('window:minimize'),

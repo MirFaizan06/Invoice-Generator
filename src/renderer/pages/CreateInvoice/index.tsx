@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Trash2, Save, Eye, RotateCcw, ChevronDown, ChevronUp, Users, X } from 'lucide-react';
 import { Button } from '../../components/UI/Button';
 import { Input, TextArea } from '../../components/UI/Input';
+import { PhoneInput } from '../../components/UI/PhoneInput';
 import { useInvoiceStore } from '../../store/invoice.store';
 import { useBusinessStore } from '../../store/business.store';
 import { useAppStore } from '../../store/app.store';
@@ -151,15 +152,17 @@ export const CreateInvoicePage: React.FC = () => {
 
   return (
     <div className="page-content create-invoice-page page-enter">
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">New Invoice</h1>
-          <p className="page-subtitle">Invoice #{nextNumber || '...'}</p>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--color-text)' }}>New Invoice</span>
+          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', padding: '2px 8px', fontFamily: 'var(--font-mono)' }}>
+            #{nextNumber || '...'}
+          </span>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <Button variant="ghost" size="sm" icon={<RotateCcw size={14} />} onClick={reset}>Reset</Button>
-          <Button variant="secondary" icon={<Eye size={15} />} onClick={() => handleSave(true)} loading={saving}>Save & Preview</Button>
-          <Button variant="primary" icon={<Save size={15} />} onClick={() => handleSave(false)} loading={saving}>Save Invoice</Button>
+          <Button variant="secondary" size="sm" icon={<Eye size={14} />} onClick={() => handleSave(true)} loading={saving}>Save & Preview</Button>
+          <Button variant="primary" size="sm" icon={<Save size={14} />} onClick={() => handleSave(false)} loading={saving}>Save Invoice</Button>
         </div>
       </div>
 
@@ -221,7 +224,7 @@ export const CreateInvoicePage: React.FC = () => {
                 hint="Optional — for B2B GST invoices"
               />
               <Input label="Client Email" type="email" placeholder="client@example.com" value={draft.client_email} onChange={(e) => setDraft({ client_email: e.target.value })} />
-              <Input label="Client Phone" type="tel" placeholder="+91 98765 43210" value={draft.client_phone} onChange={(e) => setDraft({ client_phone: e.target.value })} />
+              <PhoneInput label="Client Phone" value={draft.client_phone} onChange={(v) => setDraft({ client_phone: v })} />
               <div style={{ gridColumn: '1 / -1' }}>
                 <TextArea label="Client Address" placeholder="123 Business Street, City, State 400001" value={draft.client_address} onChange={(e) => setDraft({ client_address: e.target.value })} rows={2} />
               </div>

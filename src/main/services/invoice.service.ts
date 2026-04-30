@@ -1,11 +1,25 @@
 import fs from 'fs';
+import path from 'path';
+import { app } from 'electron';
 import { getDB } from '../database/index';
-import { getHtmlPath, getPdfPath } from '../utils/paths';
 import { generateInvoiceHTML } from './template.service';
 import type { Invoice, InvoiceItem, CreateInvoiceData, InvoiceFilters } from '../../shared/types';
 import { getBusinessById } from './business.service';
 import { getUpiForBusiness } from './upi.service';
 import { generateQRCode } from './qr.service';
+import { getSetting } from './settings.service';
+
+function getInvoicePaths(businessName: string, invoiceNumber: string): { htmlPath: string; pdfPath: string } {
+  const defaultRoot = path.join(app.getPath('documents'), 'InvoDesk', 'Invoices');
+  const saveRoot = getSetting('invoice_save_path') || defaultRoot;
+  const safeName = businessName.replace(/[<>:"/\\|?*\x00-\x1f]/g, '-').replace(/\s+/g, ' ').trim();
+  const businessFolder = path.join(saveRoot, `${safeName} - Invoices`);
+  const htmlDir = path.join(businessFolder, 'HTML');
+  const pdfDir = path.join(businessFolder, 'PDF');
+  [htmlDir, pdfDir].forEach((d) => { if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true }); });
+  const safe = invoiceNumber.replace(/\//g, '-');
+  return { htmlPath: path.join(htmlDir, `${safe}.html`), pdfPath: path.join(pdfDir, `${safe}.pdf`) };
+}
 
 type DBInvoice = Invoice;
 
@@ -91,15 +105,16 @@ export async function createInvoice(data: CreateInvoiceData): Promise<Invoice> {
   const taxAmount = ((subtotal - discountAmount) * data.tax_percent) / 100;
   const total = subtotal - discountAmount + shippingCharges + taxAmount;
 
-  const htmlPath = getHtmlPath(invoiceNumber);
-  const pdfPath = getPdfPath(invoiceNumber);
+  const { htmlPath, pdfPath } = getInvoicePaths(business.name, invoiceNumber);
 
   const upiIds = getUpiForBusiness(data.business_id);
   const primaryUpi = upiIds.find((u) => u.is_primary) || upiIds[0];
   let qrDataUrl = '';
-  const upiName = primaryUpi?.upi_name || business.name;
+  const upiName = (primaryUpi?.upi_name || business.name).trim();
   if (primaryUpi) {
-    const upiString = `upi://pay?pa=${primaryUpi.upi_id}&pn=${encodeURIComponent(upiName)}&am=${total}&cu=${data.currency || 'INR'}&tn=${encodeURIComponent(invoiceNumber)}`;
+    // UPI deep link spec: pa=VPA (unencoded @), pn=payee name, am=2dp, cu always INR, tn=note
+    const vpa = primaryUpi.upi_id.trim();
+    const upiString = `upi://pay?pa=${vpa}&pn=${encodeURIComponent(upiName)}&am=${total.toFixed(2)}&cu=INR&tn=${encodeURIComponent(invoiceNumber)}`;
     qrDataUrl = await generateQRCode(upiString);
   }
 
