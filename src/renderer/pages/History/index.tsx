@@ -22,6 +22,7 @@ export const HistoryPage: React.FC = () => {
   const [sortBy, setSortBy] = useState<'date' | 'amount' | 'client'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [deleteTarget, setDeleteTarget] = useState<Invoice | null>(null);
+  const [deleteStep, setDeleteStep] = useState<1 | 2>(1);
   const [pdfLoading, setPdfLoading] = useState<number | null>(null);
 
   const load = useCallback(async () => {
@@ -39,11 +40,20 @@ export const HistoryPage: React.FC = () => {
     return () => clearTimeout(t);
   }, [load]);
 
+  const openDeleteModal = (inv: Invoice) => {
+    setDeleteTarget(inv);
+    setDeleteStep(1);
+  };
+
   const handleDelete = async () => {
     if (!deleteTarget) return;
+    if (deleteStep === 1) {
+      setDeleteStep(2);
+      return;
+    }
     await window.electronAPI.invoice.delete(deleteTarget.id);
     setDeleteTarget(null);
-    addToast({ type: 'success', title: 'Invoice deleted' });
+    addToast({ type: 'success', title: 'Invoice deleted', message: deleteTarget.invoice_number });
     load();
   };
 
@@ -177,7 +187,7 @@ export const HistoryPage: React.FC = () => {
                       <button className="action-btn" title="Duplicate" onClick={() => handleDuplicate(inv)}>
                         <Copy size={13} />
                       </button>
-                      <button className="action-btn action-btn-danger" title="Delete" onClick={() => setDeleteTarget(inv)}>
+                      <button className="action-btn action-btn-danger" title="Delete" onClick={() => openDeleteModal(inv)}>
                         <Trash2 size={13} />
                       </button>
                     </div>
@@ -192,19 +202,33 @@ export const HistoryPage: React.FC = () => {
       <Modal
         isOpen={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
-        title="Delete Invoice"
+        title={deleteStep === 1 ? 'Delete Invoice' : 'Final Confirmation'}
         size="sm"
         footer={
           <>
             <Button variant="secondary" onClick={() => setDeleteTarget(null)}>Cancel</Button>
-            <Button variant="danger" onClick={handleDelete}>Delete</Button>
+            <Button variant="danger" onClick={handleDelete}>
+              {deleteStep === 1 ? 'Continue' : 'Yes, Delete Permanently'}
+            </Button>
           </>
         }
       >
-        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>
-          Are you sure you want to delete <strong>{deleteTarget?.invoice_number}</strong>?
-          This action cannot be undone.
-        </p>
+        {deleteStep === 1 ? (
+          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>
+            Are you sure you want to delete invoice <strong>{deleteTarget?.invoice_number}</strong>?
+            The invoice files will be removed and it will no longer appear in your history.
+          </p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 6, padding: '10px 14px', fontSize: 'var(--text-sm)', color: '#991B1B' }}>
+              This is your final confirmation. This action cannot be undone.
+            </div>
+            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>
+              Invoice <strong style={{ fontFamily: 'var(--font-mono)' }}>{deleteTarget?.invoice_number}</strong> will be permanently deleted.
+              The invoice number slot will remain reserved and cannot be reused.
+            </p>
+          </div>
+        )}
       </Modal>
     </div>
   );

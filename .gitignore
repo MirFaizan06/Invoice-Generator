@@ -6,3 +6,6 @@ dist-app/
 *.db-wal
 .env
 .env.local
+data/
+invoices/
+logs/

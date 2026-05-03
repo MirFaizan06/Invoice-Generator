@@ -4,6 +4,7 @@ import {
   markInvoicePaid, markInvoiceUnpaid, duplicateInvoice, getNextInvoiceNumber,
 } from '../services/invoice.service';
 import { generatePDF } from '../services/pdf.service';
+import { createBackupZip } from '../services/backup.service';
 
 export function registerInvoiceIPC(): void {
   ipcMain.handle('invoice:getAll', (_, filters) => getAllInvoices(filters));
@@ -22,4 +23,5 @@ export function registerInvoiceIPC(): void {
     const pdfPath = await generatePDF(invoice.html_path, invoice.pdf_path);
     return pdfPath;
   });
+  ipcMain.handle('invoice:exportBackup', async (_, destPath: string) => createBackupZip(destPath));
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, Check, X, Star, Building2, CreditCard, Sliders, Layout, Lock, FolderOpen } from 'lucide-react';
+import { Plus, Trash2, Edit2, Check, X, Star, Building2, CreditCard, Sliders, Layout, Lock, FolderOpen, Archive, AlertTriangle } from 'lucide-react';
 import { PhoneInput } from '../../components/UI/PhoneInput';
 import { Button } from '../../components/UI/Button';
 import { Input } from '../../components/UI/Input';
@@ -23,7 +23,7 @@ const TEMPLATES = [
   { id: 'monochrome', name: 'Monochrome', description: 'Black & white, minimal print', colors: ['#000000', '#374151', '#ffffff'] },
 ];
 
-function PreferencesTab({ activeBusiness }: { activeBusiness: import('@shared/types').Business }) {
+function PreferencesTab({ activeBusiness, onBackup, backupLoading }: { activeBusiness: import('@shared/types').Business; onBackup: () => void; backupLoading: boolean }) {
   const [savePath, setSavePath] = useState('');
   const addToast = useAppStore((s) => s.addToast);
 
@@ -80,6 +80,21 @@ function PreferencesTab({ activeBusiness }: { activeBusiness: import('@shared/ty
           Invoices are saved as: <span style={{ fontFamily: 'var(--font-mono)' }}>{savePath || 'Documents/InvoDesk/Invoices'}/Business Name - Invoices/</span>
         </p>
       </div>
+
+      <h3 className="settings-section-title" style={{ marginBottom: 12, marginTop: 28 }}>Backup & Export</h3>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 520 }}>
+        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
+          Export all your invoices as PDF files bundled into a single ZIP archive. Choose a folder to save the backup.
+        </p>
+        <button
+          onClick={onBackup}
+          disabled={backupLoading}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '9px 16px', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', color: 'var(--color-text)', fontWeight: 600, fontSize: 'var(--text-sm)', cursor: backupLoading ? 'wait' : 'pointer', width: 'fit-content', opacity: backupLoading ? 0.7 : 1 }}
+        >
+          <Archive size={14} />
+          {backupLoading ? 'Creating backup…' : 'Export All Bills as ZIP'}
+        </button>
+      </div>
     </div>
   );
 }
@@ -98,6 +113,8 @@ export const SettingsPage: React.FC = () => {
   const [authSetup, setAuthSetup] = useState(false);
   const [authForm, setAuthForm] = useState({ oldPass: '', newPass: '', confirmPass: '' });
   const [authError, setAuthError] = useState('');
+  const [factoryResetStep, setFactoryResetStep] = useState<0 | 1 | 2>(0);
+  const [backupLoading, setBackupLoading] = useState(false);
   const [authSuccess, setAuthSuccess] = useState('');
 
   const [bizForm, setBizForm] = useState({ name: '', owner_name: '', email: '', phone: '', address: '', gst: '', pan: '', cin: '', invoice_prefix: 'TBD/INV', default_tax: '18' });
@@ -255,6 +272,34 @@ export const SettingsPage: React.FC = () => {
     setAuthSetup(true);
     setAuthSuccess('Password protection enabled');
     setAuthForm({ oldPass: '', newPass: '', confirmPass: '' });
+  };
+
+  const handleFactoryReset = async () => {
+    if (factoryResetStep === 1) { setFactoryResetStep(2); return; }
+    try {
+      await window.electronAPI.settings.factoryReset();
+      window.location.reload();
+    } catch {
+      addToast({ type: 'error', title: 'Factory reset failed' });
+      setFactoryResetStep(0);
+    }
+  };
+
+  const handleBackup = async () => {
+    const folder = await window.electronAPI.shell.pickFolder('Choose Backup Save Location');
+    if (!folder) return;
+    setBackupLoading(true);
+    try {
+      const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      const destPath = `${folder}\\InvoDesk-Backup-${ts}.zip`;
+      const result = await window.electronAPI.invoice.exportBackup(destPath);
+      addToast({ type: 'success', title: `Backup created — ${result.count} invoice${result.count !== 1 ? 's' : ''}`, message: result.zipPath });
+      await window.electronAPI.shell.showInFolder(result.zipPath);
+    } catch (err) {
+      addToast({ type: 'error', title: 'Backup failed', message: String(err) });
+    } finally {
+      setBackupLoading(false);
+    }
   };
 
   const tabs = [
@@ -426,7 +471,7 @@ export const SettingsPage: React.FC = () => {
           )}
 
           {activeTab === 'security' && (
-            <div style={{ maxWidth: 420 }}>
+            <div style={{ maxWidth: 480 }}>
               <h3 className="settings-section-title" style={{ marginBottom: 16 }}>Password Protection</h3>
               <div style={{ background: authSetup ? '#F0FDF4' : '#FFFBEB', border: `1px solid ${authSetup ? '#BBF7D0' : '#FDE68A'}`, borderRadius: 8, padding: '12px 14px', marginBottom: 20, fontSize: 13, color: authSetup ? '#166534' : '#92400E' }}>
                 {authSetup ? 'Password protection is active. App requires password on startup.' : 'No password set. Anyone can open this app.'}
@@ -453,11 +498,28 @@ export const SettingsPage: React.FC = () => {
                   <Button variant="primary" onClick={handleSetupAuth}>Enable Password Protection</Button>
                 </div>
               )}
+
+              {/* Danger Zone */}
+              <div style={{ marginTop: 36, borderTop: '1px solid var(--color-border)', paddingTop: 24 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                  <AlertTriangle size={14} style={{ color: 'var(--color-danger)' }} />
+                  <h3 className="settings-section-title" style={{ color: 'var(--color-danger)', margin: 0 }}>Danger Zone</h3>
+                </div>
+                <div style={{ border: '1px solid #FECACA', borderRadius: 8, padding: '16px 18px', background: '#FFF5F5', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+                  <div>
+                    <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: '#991B1B' }}>Factory Reset</div>
+                    <div style={{ fontSize: 'var(--text-xs)', color: '#B91C1C', marginTop: 3, lineHeight: 1.5 }}>
+                      Permanently deletes all businesses, invoices, and financial data. Resets the app to a fresh state. Cannot be undone.
+                    </div>
+                  </div>
+                  <Button variant="danger" size="sm" onClick={() => setFactoryResetStep(1)}>Reset</Button>
+                </div>
+              </div>
             </div>
           )}
 
           {activeTab === 'preferences' && activeBusiness && (
-            <PreferencesTab activeBusiness={activeBusiness} />
+            <PreferencesTab activeBusiness={activeBusiness} onBackup={handleBackup} backupLoading={backupLoading} />
           )}
         </div>
       </div>
@@ -514,6 +576,39 @@ export const SettingsPage: React.FC = () => {
         <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>
           Delete <strong>{deleteTarget?.name}</strong>? This cannot be undone.
         </p>
+      </Modal>
+
+      {/* Factory Reset Modal */}
+      <Modal
+        isOpen={factoryResetStep > 0}
+        onClose={() => setFactoryResetStep(0)}
+        title={factoryResetStep === 1 ? 'Factory Reset' : 'Final Confirmation — Are You Sure?'}
+        size="sm"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setFactoryResetStep(0)}>Cancel</Button>
+            <Button variant="danger" onClick={handleFactoryReset}>
+              {factoryResetStep === 1 ? 'Continue' : 'Yes, Delete Everything'}
+            </Button>
+          </>
+        }
+      >
+        {factoryResetStep === 1 ? (
+          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', lineHeight: 1.7 }}>
+            This will permanently delete <strong>all businesses, invoices, transactions, and settings</strong>.
+            The app will restart and show the initial setup screen. This cannot be undone.
+          </p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 6, padding: '12px 14px', fontSize: 'var(--text-sm)', color: '#991B1B', fontWeight: 600 }}>
+              This is your absolute final warning.
+            </div>
+            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', lineHeight: 1.7 }}>
+              All data will be wiped permanently. Invoice numbering will reset to /0001.
+              Make sure you have a backup if you need any of this data.
+            </p>
+          </div>
+        )}
       </Modal>
     </div>
   );

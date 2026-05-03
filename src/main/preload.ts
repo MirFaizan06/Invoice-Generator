@@ -21,6 +21,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     duplicate: (id: number) => ipcRenderer.invoke('invoice:duplicate', id),
     generatePDF: (id: number) => ipcRenderer.invoke('invoice:generatePDF', id),
     getNextNumber: (businessId: number) => ipcRenderer.invoke('invoice:getNextNumber', businessId),
+    exportBackup: (destPath: string) => ipcRenderer.invoke('invoice:exportBackup', destPath),
   },
   finance: {
     getSummary: (year?: number) => ipcRenderer.invoke('finance:getSummary', year),
@@ -32,6 +33,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     get: (key: string) => ipcRenderer.invoke('settings:get', key),
     set: (key: string, value: string) => ipcRenderer.invoke('settings:set', key, value),
     getAll: () => ipcRenderer.invoke('settings:getAll'),
+    factoryReset: () => ipcRenderer.invoke('settings:factoryReset'),
   },
   upi: {
     getForBusiness: (businessId: number) => ipcRenderer.invoke('upi:getForBusiness', businessId),

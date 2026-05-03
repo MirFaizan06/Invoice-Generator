@@ -257,4 +257,7 @@ function runMigrations(db: SQLiteWrapper): void {
   // invoice_items new columns
   addColumnSafe(db, 'invoice_items', 'hsn_sac', "TEXT DEFAULT ''");
   addColumnSafe(db, 'invoice_items', 'unit', "TEXT DEFAULT ''");
+
+  // soft delete
+  addColumnSafe(db, 'invoices', 'is_deleted', 'INTEGER DEFAULT 0');
 }

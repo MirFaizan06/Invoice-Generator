@@ -112,6 +112,7 @@ export interface InvoiceFilters {
   dateTo?: string;
   sortBy?: 'date' | 'amount' | 'client';
   sortOrder?: 'asc' | 'desc';
+  limit?: number;
 }
 
 export interface CreateInvoiceData {
@@ -200,6 +201,7 @@ export interface ElectronAPI {
     duplicate: (id: number) => Promise<Invoice>;
     generatePDF: (id: number) => Promise<string>;
     getNextNumber: (businessId: number) => Promise<string>;
+    exportBackup: (destPath: string) => Promise<{ count: number; total: number; zipPath: string }>;
   };
   finance: {
     getSummary: (year?: number) => Promise<FinanceSummary>;
@@ -211,6 +213,7 @@ export interface ElectronAPI {
     get: (key: string) => Promise<string | null>;
     set: (key: string, value: string) => Promise<void>;
     getAll: () => Promise<Record<string, string>>;
+    factoryReset: () => Promise<void>;
   };
   upi: {
     getForBusiness: (businessId: number) => Promise<UpiId[]>;

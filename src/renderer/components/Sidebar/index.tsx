@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, FilePlus, FileText, TrendingUp, Settings, Building2, ChevronRight, Code2 } from 'lucide-react';
+import { LayoutDashboard, FilePlus, FileText, Search, TrendingUp, Settings, Building2, ChevronRight, Code2 } from 'lucide-react';
 import { useBusinessStore } from '../../store/business.store';
 import './Sidebar.css';
 
@@ -8,6 +8,7 @@ const navItems = [
   { path: '/dashboard', icon: <LayoutDashboard size={17} />, label: 'Dashboard' },
   { path: '/create-invoice', icon: <FilePlus size={17} />, label: 'New Invoice' },
   { path: '/history', icon: <FileText size={17} />, label: 'Invoice History' },
+  { path: '/search', icon: <Search size={17} />, label: 'Search' },
   { path: '/finance', icon: <TrendingUp size={17} />, label: 'Finance' },
   { path: '/settings', icon: <Settings size={17} />, label: 'Settings' },
 ];

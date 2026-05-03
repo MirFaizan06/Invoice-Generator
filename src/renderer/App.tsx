@@ -11,6 +11,7 @@ import { DashboardPage } from './pages/Dashboard/index';
 import { CreateInvoicePage } from './pages/CreateInvoice/index';
 import { InvoicePreviewPage } from './pages/InvoicePreview/index';
 import { HistoryPage } from './pages/History/index';
+import { SearchPage } from './pages/Search/index';
 import { FinancePage } from './pages/Finance/index';
 import { SettingsPage } from './pages/Settings/index';
 import { DeveloperContactPage } from './pages/DeveloperContact/index';
@@ -108,6 +109,7 @@ export default function App() {
             <Route path="/create-invoice" element={<CreateInvoicePage />} />
             <Route path="/invoice/:id" element={<InvoicePreviewPage />} />
             <Route path="/history" element={<HistoryPage />} />
+            <Route path="/search" element={<SearchPage />} />
             <Route path="/finance" element={<FinancePage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/developer" element={<DeveloperContactPage />} />

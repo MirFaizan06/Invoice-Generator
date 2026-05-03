@@ -37,7 +37,7 @@ function getInvoiceById(id: number): Invoice | null {
 export { getInvoiceById };
 
 export function getAllInvoices(filters: InvoiceFilters = {}): Invoice[] {
-  let query = 'SELECT * FROM invoices WHERE 1=1';
+  let query = 'SELECT * FROM invoices WHERE (is_deleted = 0 OR is_deleted IS NULL)';
   const params: unknown[] = [];
 
   if (filters.status && filters.status !== 'all') {
@@ -49,9 +49,9 @@ export function getAllInvoices(filters: InvoiceFilters = {}): Invoice[] {
     params.push(filters.business_id);
   }
   if (filters.search) {
-    query += ' AND (client_name LIKE ? OR invoice_number LIKE ? OR project_name LIKE ?)';
+    query += ' AND (client_name LIKE ? OR invoice_number LIKE ? OR project_name LIKE ? OR client_email LIKE ? OR client_gst LIKE ?)';
     const s = `%${filters.search}%`;
-    params.push(s, s, s);
+    params.push(s, s, s, s, s);
   }
   if (filters.dateFrom) {
     query += ' AND date >= ?';
@@ -66,6 +66,10 @@ export function getAllInvoices(filters: InvoiceFilters = {}): Invoice[] {
   const sortCol = sortMap[filters.sortBy || 'date'] || 'date';
   const sortDir = filters.sortOrder === 'asc' ? 'ASC' : 'DESC';
   query += ` ORDER BY ${sortCol} ${sortDir}`;
+
+  if (filters.limit && filters.limit > 0) {
+    query += ` LIMIT ${Math.floor(filters.limit)}`;
+  }
 
   const rows = getDB().prepare(query).all(...params) as DBInvoice[];
   return rows.map((row) => ({ ...row, items: getItems(row.id) }));
@@ -245,10 +249,15 @@ export function updateInvoice(id: number, data: Partial<CreateInvoiceData>): Inv
 export function deleteInvoice(id: number): void {
   const invoice = getInvoiceById(id);
   if (invoice) {
-    if (invoice.html_path && fs.existsSync(invoice.html_path)) fs.unlinkSync(invoice.html_path);
-    if (invoice.pdf_path && fs.existsSync(invoice.pdf_path)) fs.unlinkSync(invoice.pdf_path);
+    try { if (invoice.html_path && fs.existsSync(invoice.html_path)) fs.unlinkSync(invoice.html_path); } catch {}
+    try { if (invoice.pdf_path && fs.existsSync(invoice.pdf_path)) fs.unlinkSync(invoice.pdf_path); } catch {}
+    // Remove associated revenue transaction if paid
+    if (invoice.status === 'paid') {
+      getDB().prepare('DELETE FROM transactions WHERE invoice_id = ? AND type = ?').run(id, 'revenue');
+    }
   }
-  getDB().prepare('DELETE FROM invoices WHERE id = ?').run(id);
+  // Soft delete: mark as deleted but keep the row so the invoice number slot is preserved
+  getDB().prepare("UPDATE invoices SET is_deleted = 1, html_path = '', pdf_path = '', updated_at = datetime('now') WHERE id = ?").run(id);
 }
 
 export function markInvoicePaid(id: number): void {
