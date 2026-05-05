@@ -7,6 +7,7 @@ import { PhoneInput } from '../../components/UI/PhoneInput';
 import { useInvoiceStore } from '../../store/invoice.store';
 import { useBusinessStore } from '../../store/business.store';
 import { useAppStore } from '../../store/app.store';
+import { Tooltip } from '../../components/Tooltip';
 import type { SavedClient } from '@shared/types';
 import './CreateInvoice.css';
 
@@ -248,17 +249,25 @@ export const CreateInvoicePage: React.FC = () => {
                 error={hasError('Project Name') ? 'Project name is required' : ''}
                 required
               />
-              <Input
-                label="PO Number"
-                placeholder="PO-2026-001"
-                value={draft.po_number}
-                onChange={(e) => setDraft({ po_number: e.target.value })}
-                hint="Purchase Order reference (optional)"
-              />
+              <div>
+                <label className="input-label" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                  PO Number
+                  <Tooltip text="A Purchase Order number given to you by your client. Add it here if your client provided one — it'll appear on the invoice for their records." />
+                </label>
+                <Input
+                  placeholder="PO-2026-001"
+                  value={draft.po_number}
+                  onChange={(e) => setDraft({ po_number: e.target.value })}
+                  hint="Purchase Order reference (optional)"
+                />
+              </div>
               <Input label="Invoice Date" type="date" value={draft.date} onChange={(e) => setDraft({ date: e.target.value })} required />
               <Input label="Due Date" type="date" value={draft.due_date} onChange={(e) => setDraft({ due_date: e.target.value })} hint="Payment due date" />
               <div>
-                <label className="input-label">Payment Terms</label>
+                <label className="input-label" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                  Payment Terms
+                  <Tooltip text="Sets the deadline for payment. 'Net 30' means payment is due 30 days from the invoice date. 'Due on Receipt' means pay immediately." />
+                </label>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
                   {PAYMENT_TERMS.map((pt) => (
                     <button
@@ -367,7 +376,13 @@ export const CreateInvoicePage: React.FC = () => {
                   {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
-              <Input label="Tax %" type="number" min="0" max="100" step="0.5" value={String(draft.tax_percent)} onChange={(e) => setDraft({ tax_percent: parseFloat(e.target.value) || 0 })} />
+              <div>
+                <label className="input-label" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                  Tax %
+                  <Tooltip text="The tax rate applied to your subtotal. Set to 0 if you don't charge tax — the tax line will be hidden from the invoice." />
+                </label>
+                <Input type="number" min="0" max="100" step="0.5" value={String(draft.tax_percent)} onChange={(e) => setDraft({ tax_percent: parseFloat(e.target.value) || 0 })} />
+              </div>
               <Input label="Discount %" type="number" min="0" max="100" step="0.5" value={String(draft.discount_percent)} onChange={(e) => setDraft({ discount_percent: parseFloat(e.target.value) || 0, discount_amount: 0 })} hint="% of subtotal" />
               <Input label="Shipping (₹)" type="number" min="0" step="1" value={String(draft.shipping_charges)} onChange={(e) => setDraft({ shipping_charges: parseFloat(e.target.value) || 0 })} />
             </div>
@@ -422,10 +437,12 @@ export const CreateInvoicePage: React.FC = () => {
                   <span>{sym}{(draft.shipping_charges || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                 </div>
               )}
-              <div className="ci-summary-row">
-                <span>Tax ({draft.tax_percent}%)</span>
-                <span>{sym}{taxAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-              </div>
+              {draft.tax_percent > 0 && (
+                <div className="ci-summary-row">
+                  <span>Tax ({draft.tax_percent}%)</span>
+                  <span>{sym}{taxAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                </div>
+              )}
             </div>
 
             <div className="ci-summary-total">

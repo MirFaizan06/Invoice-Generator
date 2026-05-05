@@ -1,0 +1,28 @@
+.tooltip-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 5px;
+  cursor: default;
+}
+.tooltip-icon {
+  color: #999;
+}
+.tooltip-wrapper:hover .tooltip-icon {
+  color: #555;
+}
+.tooltip-box {
+  position: absolute;
+  left: 20px;
+  top: -4px;
+  background: #1e1e1e;
+  color: #f0f0f0;
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 8px 10px;
+  border-radius: 6px;
+  width: 240px;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}

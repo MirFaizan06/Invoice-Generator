@@ -116,9 +116,17 @@ export async function createInvoice(data: CreateInvoiceData): Promise<Invoice> {
   let qrDataUrl = '';
   const upiName = (primaryUpi?.upi_name || business.name).trim();
   if (primaryUpi) {
-    // UPI deep link spec: pa=VPA (unencoded @), pn=payee name, am=2dp, cu always INR, tn=note
-    const vpa = primaryUpi.upi_id.trim();
-    const upiString = `upi://pay?pa=${vpa}&pn=${encodeURIComponent(upiName)}&am=${total.toFixed(2)}&cu=INR&tn=${encodeURIComponent(invoiceNumber)}`;
+    const cleanVpa = primaryUpi.upi_id.trim().toLowerCase().replace(/\s+/g, '');
+    const cleanName = (primaryUpi.upi_name || business.name || '').trim().replace(/\s+/g, ' ');
+    const upiString =
+      `upi://pay?` +
+      `pa=${cleanVpa}` +
+      `&pn=${encodeURIComponent(cleanName)}` +
+      `&am=${total.toFixed(2)}` +
+      `&cu=INR` +
+      `&tn=${encodeURIComponent(invoiceNumber)}` +
+      `&tr=${encodeURIComponent(invoiceNumber)}` +
+      `&mc=0000`;
     qrDataUrl = await generateQRCode(upiString);
   }
 

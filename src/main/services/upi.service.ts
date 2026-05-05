@@ -55,6 +55,10 @@ export function deleteUpiId(id: number): void {
   getDB().prepare('DELETE FROM upi_ids WHERE id = ?').run(id);
 }
 
+export function isValidUpiFormat(vpa: string): boolean {
+  return /^[a-z0-9.\-_]{2,256}@[a-z]{2,64}$/.test(vpa.trim().toLowerCase());
+}
+
 export function parseUpiId(upiId: string): { suggested_name: string; vpa: string; bank: string } {
   const trimmed = upiId.trim().toLowerCase();
   const parts = trimmed.split('@');

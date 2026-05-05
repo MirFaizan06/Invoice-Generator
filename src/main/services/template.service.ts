@@ -31,7 +31,7 @@ function buildTotalsRows(inv: TemplateData['invoice'], sym: string): string {
   let rows = `<div class="totals-line"><span>Subtotal</span><span>${sym}${formatCurrency(inv.subtotal)}</span></div>`;
   if (discount > 0) rows += `<div class="totals-line discount"><span>Discount${inv.discount_percent ? ` (${inv.discount_percent}%)` : ''}</span><span>− ${sym}${formatCurrency(discount)}</span></div>`;
   if (shipping > 0) rows += `<div class="totals-line"><span>Shipping</span><span>${sym}${formatCurrency(shipping)}</span></div>`;
-  rows += `<div class="totals-line"><span>Tax (${inv.tax_percent || 18}%)</span><span>${sym}${formatCurrency(inv.tax_amount)}</span></div>`;
+  rows += (inv.tax_percent && inv.tax_percent > 0) ? `<div class="totals-line"><span>Tax (${inv.tax_percent}%)</span><span>${sym}${formatCurrency(inv.tax_amount)}</span></div>` : '';
   return rows;
 }
 
@@ -127,6 +127,7 @@ thead .col-qty,thead .col-rate,thead .col-amount,thead .col-unit { text-align:ri
 .qr-box { display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:120px; }
 .qr-box img { width:104px; height:104px; border:1px solid ${o.lightBorder}; border-radius:6px; padding:5px; }
 .qr-box p { font-size:9px; color:${o.mutedColor}; margin-top:7px; }
+.upi-fallback { font-size:10px; color:#888; margin-top:4px; text-align:center; }
 
 .notes-section { border-left:3px solid ${o.accent}; background:${o.lightBg}; padding:14px 18px; margin-bottom:30px; border-radius:0 6px 6px 0; }
 .notes-section h3 { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:${o.accent}; margin-bottom:7px; }
@@ -239,6 +240,7 @@ ${showPayment ? `<div class="payment-section">
   ${qrDataUrl ? `<div class="qr-box">
     <img src="${qrDataUrl}" alt="UPI QR Code" />
     <p>Scan to pay via UPI</p>
+    <p class="upi-fallback">If scanning doesn't work, please use the UPI ID below to pay manually — that method is more reliable.</p>
   </div>` : ''}
 </div>` : ''}
 

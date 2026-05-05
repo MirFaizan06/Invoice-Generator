@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron';
-import { getUpiForBusiness, addUpiId, updateUpiId, deleteUpiId, parseUpiId } from '../services/upi.service';
+import { getUpiForBusiness, addUpiId, updateUpiId, deleteUpiId, parseUpiId, isValidUpiFormat } from '../services/upi.service';
 import { generateQRCode } from '../services/qr.service';
 
 export function registerUpiIPC(): void {
@@ -7,8 +7,21 @@ export function registerUpiIPC(): void {
   ipcMain.handle('upi:add', (_, data) => addUpiId(data));
   ipcMain.handle('upi:update', (_, id, data) => updateUpiId(id, data));
   ipcMain.handle('upi:delete', (_, id) => deleteUpiId(id));
-  ipcMain.handle('upi:generateQR', async (_, upiId, amount, name, invoiceNumber) => {
-    const upiString = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(name)}&am=${amount}&cu=INR&tn=${encodeURIComponent(invoiceNumber)}`;
+  ipcMain.handle('upi:generateQR', async (_, upiId: string, amount: number, name: string, invoiceNumber: string) => {
+    const cleanVpa = upiId.trim().toLowerCase().replace(/\s+/g, '');
+    const cleanName = (name || '').trim().replace(/\s+/g, ' ');
+    if (!isValidUpiFormat(cleanVpa)) {
+      console.warn(`[UPI] Invalid UPI format: ${cleanVpa}`);
+    }
+    const upiString =
+      `upi://pay?` +
+      `pa=${cleanVpa}` +
+      `&pn=${encodeURIComponent(cleanName)}` +
+      `&am=${Number(amount).toFixed(2)}` +
+      `&cu=INR` +
+      `&tn=${encodeURIComponent(invoiceNumber)}` +
+      `&tr=${encodeURIComponent(invoiceNumber)}` +
+      `&mc=0000`;
     return generateQRCode(upiString);
   });
   ipcMain.handle('upi:parseUpiId', (_, upiId: string) => parseUpiId(upiId));
