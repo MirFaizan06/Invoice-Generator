@@ -20,8 +20,7 @@ export function registerUpiIPC(): void {
       `&am=${Number(amount).toFixed(2)}` +
       `&cu=INR` +
       `&tn=${encodeURIComponent(invoiceNumber)}` +
-      `&tr=${encodeURIComponent(invoiceNumber)}` +
-      `&mc=0000`;
+      `&tr=${encodeURIComponent(invoiceNumber)}`;
     return generateQRCode(upiString);
   });
   ipcMain.handle('upi:parseUpiId', (_, upiId: string) => parseUpiId(upiId));

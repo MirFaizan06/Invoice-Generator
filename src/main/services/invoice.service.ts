@@ -125,8 +125,7 @@ export async function createInvoice(data: CreateInvoiceData): Promise<Invoice> {
       `&am=${total.toFixed(2)}` +
       `&cu=INR` +
       `&tn=${encodeURIComponent(invoiceNumber)}` +
-      `&tr=${encodeURIComponent(invoiceNumber)}` +
-      `&mc=0000`;
+      `&tr=${encodeURIComponent(invoiceNumber)}`;
     qrDataUrl = await generateQRCode(upiString);
   }
 
