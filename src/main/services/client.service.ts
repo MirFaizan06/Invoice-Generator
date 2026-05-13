@@ -10,9 +10,18 @@ function rowToClient(row: any): SavedClient {
     phone: row.phone || '',
     address: row.address || '',
     gst: row.gst || '',
+    pan: row.pan || '',
+    website: row.website || '',
+    notes: row.notes || '',
     created_at: row.created_at,
     updated_at: row.updated_at,
   };
+}
+
+export function getClientById(id: number): SavedClient | null {
+  const row = getDB().prepare('SELECT * FROM saved_clients WHERE id = ?').get(id) as any;
+  if (!row) return null;
+  return rowToClient(row);
 }
 
 export const ClientService = {
@@ -25,8 +34,8 @@ export const ClientService = {
   save(data: Omit<SavedClient, 'id' | 'created_at' | 'updated_at'>): SavedClient {
     const db = getDB();
     const result = db.prepare(
-      'INSERT INTO saved_clients (business_id, name, email, phone, address, gst) VALUES (?, ?, ?, ?, ?, ?)'
-    ).run(data.business_id, data.name, data.email, data.phone, data.address, data.gst);
+      'INSERT INTO saved_clients (business_id, name, email, phone, address, gst, pan, website, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    ).run(data.business_id, data.name, data.email, data.phone, data.address, data.gst, data.pan || '', data.website || '', data.notes || '');
     const row = db.prepare('SELECT * FROM saved_clients WHERE id = ?').get(result.lastInsertRowid) as any;
     return rowToClient(row);
   },

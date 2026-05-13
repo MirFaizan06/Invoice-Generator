@@ -10,7 +10,7 @@ import { generateQRCode } from './qr.service';
 import { getSetting } from './settings.service';
 
 function getInvoicePaths(businessName: string, invoiceNumber: string): { htmlPath: string; pdfPath: string } {
-  const defaultRoot = path.join(app.getPath('documents'), 'InvoDesk', 'Invoices');
+  const defaultRoot = path.join(app.getPath('documents'), 'BizDesk', 'Invoices');
   const saveRoot = getSetting('invoice_save_path') || defaultRoot;
   const safeName = businessName.replace(/[<>:"/\\|?*\x00-\x1f]/g, '-').replace(/\s+/g, ' ').trim();
   const businessFolder = path.join(saveRoot, `${safeName} - Invoices`);

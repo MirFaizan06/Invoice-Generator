@@ -27,7 +27,7 @@ export async function createBackupZip(destPath: string): Promise<{ count: number
 
       // Generate PDF on the fly if it doesn't exist but HTML does
       if ((!pdfPath || !fs.existsSync(pdfPath)) && row.html_path && fs.existsSync(row.html_path)) {
-        const defaultRoot = path.join(app.getPath('documents'), 'InvoDesk', 'Invoices');
+        const defaultRoot = path.join(app.getPath('documents'), 'BizDesk', 'Invoices');
         const saveRoot = getSetting('invoice_save_path') || defaultRoot;
         const safe = row.invoice_number.replace(/\//g, '-');
         const newPdfPath = path.join(saveRoot, 'Backup-PDF', `${safe}.pdf`);

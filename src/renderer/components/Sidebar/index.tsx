@@ -1,11 +1,14 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, FilePlus, FileText, Search, TrendingUp, Settings, Building2, ChevronRight, Code2 } from 'lucide-react';
+import { LayoutDashboard, FilePlus, FileText, Search, TrendingUp, Settings, Building2, ChevronRight, Code2, Users, Briefcase, ScrollText } from 'lucide-react';
 import { useBusinessStore } from '../../store/business.store';
 import './Sidebar.css';
 
 const navItems = [
   { path: '/dashboard', icon: <LayoutDashboard size={17} />, label: 'Dashboard' },
+  { path: '/clients', icon: <Users size={17} />, label: 'Clients' },
+  { path: '/projects', icon: <Briefcase size={17} />, label: 'Projects' },
+  { path: '/documents', icon: <ScrollText size={17} />, label: 'Documents' },
   { path: '/create-invoice', icon: <FilePlus size={17} />, label: 'New Invoice' },
   { path: '/history', icon: <FileText size={17} />, label: 'Invoice History' },
   { path: '/search', icon: <Search size={17} />, label: 'Search' },
@@ -23,7 +26,7 @@ export const Sidebar: React.FC = () => {
           <FileText size={18} color="#fff" />
         </div>
         <div>
-          <div className="sidebar-logo-title">InvoDesk</div>
+          <div className="sidebar-logo-title">BizDesk</div>
           <div className="sidebar-logo-subtitle">by Tech Bytes Design</div>
         </div>
       </div>

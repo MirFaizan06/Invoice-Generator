@@ -54,6 +54,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
   clients: {
     getForBusiness: (businessId: number) => ipcRenderer.invoke('clients:getForBusiness', businessId),
+    getById: (id: number) => ipcRenderer.invoke('clients:getById', id),
     save: (data: unknown) => ipcRenderer.invoke('clients:save', data),
     update: (id: number, data: unknown) => ipcRenderer.invoke('clients:update', id, data),
     delete: (id: number) => ipcRenderer.invoke('clients:delete', id),
@@ -69,5 +70,23 @@ contextBridge.exposeInMainWorld('electronAPI', {
     minimize: () => ipcRenderer.invoke('window:minimize'),
     maximize: () => ipcRenderer.invoke('window:maximize'),
     close: () => ipcRenderer.invoke('window:close'),
+  },
+  project: {
+    getForClient: (clientId: number) => ipcRenderer.invoke('project:getForClient', clientId),
+    getForBusiness: (businessId: number) => ipcRenderer.invoke('project:getForBusiness', businessId),
+    create: (data: unknown) => ipcRenderer.invoke('project:create', data),
+    update: (id: number, data: unknown) => ipcRenderer.invoke('project:update', id, data),
+    delete: (id: number) => ipcRenderer.invoke('project:delete', id),
+  },
+  document: {
+    getAll: (filters?: unknown) => ipcRenderer.invoke('document:getAll', filters),
+    getById: (id: number) => ipcRenderer.invoke('document:getById', id),
+    generate: (docType: string, clientId: number, projectId: number | null, businessId: number, fieldValues: unknown) =>
+      ipcRenderer.invoke('document:generate', docType, clientId, projectId, businessId, fieldValues),
+    save: (data: unknown) => ipcRenderer.invoke('document:save', data),
+    markSigned: (id: number) => ipcRenderer.invoke('document:markSigned', id),
+    generatePDF: (id: number) => ipcRenderer.invoke('document:generatePDF', id),
+    delete: (id: number) => ipcRenderer.invoke('document:delete', id),
+    hasSignedMSA: (clientId: number) => ipcRenderer.invoke('document:hasSignedMSA', clientId),
   },
 });

@@ -58,7 +58,7 @@ export const OnboardingPage: React.FC<OnboardingProps> = ({ onComplete }) => {
   const addToast = useAppStore((s) => s.addToast);
 
   const [invoiceSavePath, setInvoiceSavePath] = useState('');
-  const defaultSavePath = 'Documents/InvoDesk/Invoices (default)';
+  const defaultSavePath = 'Documents/BizDesk/Invoices (default)';
 
   const [form, setForm] = useState<FormData>({
     owner_name: '',
@@ -163,7 +163,7 @@ export const OnboardingPage: React.FC<OnboardingProps> = ({ onComplete }) => {
           <div className="onboarding-brand-icon">
             <FileText size={28} color="#fff" />
           </div>
-          <div className="onboarding-brand-name">InvoDesk</div>
+          <div className="onboarding-brand-name">BizDesk</div>
           <div className="onboarding-brand-tagline">Professional invoicing for modern businesses</div>
         </div>
 
@@ -195,7 +195,7 @@ export const OnboardingPage: React.FC<OnboardingProps> = ({ onComplete }) => {
               <div className="onboarding-welcome-icon">
                 <FileText size={40} />
               </div>
-              <h1 className="onboarding-title">Welcome to InvoDesk</h1>
+              <h1 className="onboarding-title">Welcome to BizDesk</h1>
               <p className="onboarding-desc">
                 Your professional invoicing solution. Set up your business profile in just a few steps. It takes less than 2 minutes.
               </p>
@@ -320,7 +320,7 @@ export const OnboardingPage: React.FC<OnboardingProps> = ({ onComplete }) => {
           {step === 5 && (
             <div className="onboarding-step-content">
               <h1 className="onboarding-title">Invoice Save Location</h1>
-              <p className="onboarding-desc">Choose where InvoDesk should save your invoices. Each business gets its own folder.</p>
+              <p className="onboarding-desc">Choose where BizDesk should save your invoices. Each business gets its own folder.</p>
               <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', padding: '14px 16px' }}>
                   <div style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 6 }}>Save Path</div>
@@ -339,7 +339,7 @@ export const OnboardingPage: React.FC<OnboardingProps> = ({ onComplete }) => {
                 </button>
                 <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
                   Invoices will be saved as:<br />
-                  <span style={{ fontFamily: 'var(--font-mono)' }}>{invoiceSavePath || 'Documents/InvoDesk/Invoices'}/</span><br />
+                  <span style={{ fontFamily: 'var(--font-mono)' }}>{invoiceSavePath || 'Documents/BizDesk/Invoices'}/</span><br />
                   <span style={{ fontFamily: 'var(--font-mono)' }}>  {form.name || 'Your Business'} - Invoices/HTML/</span><br />
                   <span style={{ fontFamily: 'var(--font-mono)' }}>  {form.name || 'Your Business'} - Invoices/PDF/</span>
                 </p>

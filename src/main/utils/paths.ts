@@ -4,7 +4,7 @@ import fs from 'fs';
 
 export const AppPaths = {
   get dataDir() {
-    const dir = path.join(app.getPath('documents'), 'InvoDesk');
+    const dir = path.join(app.getPath('documents'), 'BizDesk');
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     return dir;
   },

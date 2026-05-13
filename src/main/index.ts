@@ -10,6 +10,8 @@ import { registerSettingsIPC } from './ipc/settings.ipc';
 import { registerUpiIPC } from './ipc/upi.ipc';
 import { registerAuthHandlers } from './ipc/auth.ipc';
 import { registerClientHandlers } from './ipc/client.ipc';
+import { registerProjectsIPC } from './ipc/projects.ipc';
+import { registerDocumentsIPC } from './ipc/documents.ipc';
 
 const isDev = !app.isPackaged;
 let mainWindow: BrowserWindow | null = null;
@@ -21,7 +23,7 @@ function createWindow(): void {
     minWidth: 1024,
     minHeight: 680,
     frame: false,
-    title: 'InvoDesk',
+    title: 'BizDesk',
     backgroundColor: '#F8F9FA',
     webPreferences: {
       nodeIntegration: false,
@@ -91,6 +93,8 @@ app.whenReady().then(async () => {
   registerUpiIPC();
   registerAuthHandlers();
   registerClientHandlers();
+  registerProjectsIPC();
+  registerDocumentsIPC();
   createWindow();
 
   app.on('activate', () => {

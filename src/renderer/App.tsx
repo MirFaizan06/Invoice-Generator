@@ -15,6 +15,10 @@ import { SearchPage } from './pages/Search/index';
 import { FinancePage } from './pages/Finance/index';
 import { SettingsPage } from './pages/Settings/index';
 import { DeveloperContactPage } from './pages/DeveloperContact/index';
+import ClientsPage from './pages/Clients/index';
+import ProjectsPage from './pages/Projects/index';
+import DocumentsPage from './pages/Documents/index';
+import DocumentGeneratorPage from './pages/DocumentGenerator/index';
 
 type AppState = 'splash' | 'loading' | 'auth-setup' | 'auth-login' | 'onboarding' | 'app';
 
@@ -113,6 +117,10 @@ export default function App() {
             <Route path="/finance" element={<FinancePage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/developer" element={<DeveloperContactPage />} />
+            <Route path="/clients" element={<ClientsPage />} />
+            <Route path="/projects" element={<ProjectsPage />} />
+            <Route path="/documents" element={<DocumentsPage />} />
+            <Route path="/document-generator" element={<DocumentGeneratorPage />} />
           </Route>
         </Routes>
         <ToastContainer />

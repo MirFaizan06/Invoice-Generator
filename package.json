@@ -1,7 +1,7 @@
 {
-  "name": "invodessk",
-  "version": "1.3.1",
-  "description": "Professional offline invoicing system",
+  "name": "bizdesk",
+  "version": "2.0.0",
+  "description": "Complete business suite — invoicing, clients, projects, and legal documents",
   "main": "dist/main/index.js",
   "author": {
     "name": "Mir Faizan",
@@ -42,8 +42,8 @@
     "wait-on": "^7.2.0"
   },
   "build": {
-    "appId": "com.techbytesdesign.invodessk",
-    "productName": "InvoDesk",
+    "appId": "com.techbytesdesign.bizdesk",
+    "productName": "BizDesk",
     "copyright": "Copyright © 2026 Tech Bytes Design",
     "directories": {
       "output": "dist-app",
@@ -60,7 +60,7 @@
     "win": {
       "target": "nsis",
       "icon": "build/icon.ico",
-      "artifactName": "InvoDesk-Setup.exe"
+      "artifactName": "BizDesk-Setup.exe"
     },
     "nsis": {
       "oneClick": false,

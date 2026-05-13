@@ -9,7 +9,7 @@ export function factoryReset(): void {
   const db = getDB();
 
   // Delete all invoice files
-  const defaultRoot = path.join(app.getPath('documents'), 'InvoDesk', 'Invoices');
+  const defaultRoot = path.join(app.getPath('documents'), 'BizDesk', 'Invoices');
   const saveRoot = getSetting('invoice_save_path') || defaultRoot;
   if (fs.existsSync(saveRoot)) {
     try { fs.rmSync(saveRoot, { recursive: true, force: true }); } catch {}

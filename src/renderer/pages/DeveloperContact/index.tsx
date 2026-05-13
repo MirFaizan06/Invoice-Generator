@@ -10,7 +10,7 @@ export const DeveloperContactPage: React.FC = () => {
       <div className="page-header">
         <div>
           <h1 className="page-title">Developer Contact</h1>
-          <p className="page-subtitle">Get in touch with the InvoDesk team</p>
+          <p className="page-subtitle">Get in touch with the BizDesk team</p>
         </div>
       </div>
 
@@ -22,7 +22,7 @@ export const DeveloperContactPage: React.FC = () => {
           <div className="dev-name">Mir Faizan</div>
           <div className="dev-role">Full Stack Developer · Tech Bytes Design</div>
           <div className="dev-bio">
-            Building InvoDesk — a professional offline invoicing system for freelancers and small businesses.
+            Building BizDesk — a complete offline business suite for freelancers and small businesses.
             Available for custom software, web development, and automation projects.
           </div>
 
@@ -63,9 +63,9 @@ export const DeveloperContactPage: React.FC = () => {
         </div>
 
         <div className="dev-info-card">
-          <h3 className="dev-info-title">About InvoDesk</h3>
+          <h3 className="dev-info-title">About BizDesk</h3>
           <p className="dev-info-text">
-            InvoDesk is built with Electron, React, and TypeScript. It runs completely offline —
+            BizDesk is built with Electron, React, and TypeScript. It runs completely offline —
             your business data never leaves your device.
           </p>
           <div className="dev-info-tags">

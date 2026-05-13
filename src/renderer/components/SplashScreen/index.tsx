@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FileText } from 'lucide-react';
+import { LayoutGrid } from 'lucide-react';
 import './SplashScreen.css';
 
 interface SplashScreenProps {
@@ -20,10 +20,10 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onDone }) => {
     <div className={`splash-screen splash-${phase}`}>
       <div className="splash-content">
         <div className="splash-icon">
-          <FileText size={40} color="#fff" />
+          <LayoutGrid size={40} color="#fff" />
         </div>
-        <div className="splash-name">InvoDesk</div>
-        <div className="splash-tagline">Professional Invoicing</div>
+        <div className="splash-name">BizDesk</div>
+        <div className="splash-tagline">Complete Business Suite</div>
         <div className="splash-bar">
           <div className="splash-bar-fill" />
         </div>

@@ -164,6 +164,9 @@ export interface SavedClient {
   phone: string;
   address: string;
   gst: string;
+  pan: string;
+  website: string;
+  notes: string;
   created_at: string;
   updated_at: string;
 }
@@ -233,6 +236,7 @@ export interface ElectronAPI {
   };
   clients: {
     getForBusiness: (businessId: number) => Promise<SavedClient[]>;
+    getById: (id: number) => Promise<SavedClient | null>;
     save: (data: Omit<SavedClient, 'id' | 'created_at' | 'updated_at'>) => Promise<SavedClient>;
     update: (id: number, data: Partial<Omit<SavedClient, 'id' | 'created_at' | 'updated_at'>>) => Promise<SavedClient>;
     delete: (id: number) => Promise<void>;
@@ -249,6 +253,124 @@ export interface ElectronAPI {
     maximize: () => Promise<void>;
     close: () => Promise<void>;
   };
+  project: {
+    getForClient: (clientId: number) => Promise<Project[]>;
+    getForBusiness: (businessId: number) => Promise<Project[]>;
+    create: (data: CreateProjectData) => Promise<Project>;
+    update: (id: number, data: Partial<CreateProjectData>) => Promise<Project>;
+    delete: (id: number) => Promise<void>;
+  };
+  document: {
+    getAll: (filters?: { clientId?: number; projectId?: number; docType?: DocType; businessId?: number }) => Promise<LegalDocument[]>;
+    getById: (id: number) => Promise<LegalDocument | null>;
+    generate: (docType: DocType, clientId: number, projectId: number | null, businessId: number, fieldValues: Record<string, unknown>) => Promise<{ html: string; title: string }>;
+    save: (data: CreateLegalDocumentData) => Promise<LegalDocument>;
+    markSigned: (id: number) => Promise<void>;
+    generatePDF: (id: number) => Promise<string>;
+    delete: (id: number) => Promise<void>;
+    hasSignedMSA: (clientId: number) => Promise<boolean>;
+  };
+}
+
+export type DocType = 'msa' | 'sow' | 'nda' | 'sla';
+export type DocStatus = 'draft' | 'signed' | 'expired' | 'superseded';
+export type ProjectStatus = 'active' | 'completed' | 'archived';
+
+export interface Project {
+  id: number;
+  client_id: number;
+  business_id: number;
+  name: string;
+  description: string;
+  status: ProjectStatus;
+  start_date: string;
+  end_date: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LegalDocument {
+  id: number;
+  project_id: number | null;
+  client_id: number;
+  business_id: number;
+  doc_type: DocType;
+  version: number;
+  status: DocStatus;
+  title: string;
+  content_html: string;
+  pdf_path: string;
+  generated_at: string;
+  signed_at: string | null;
+  expiry_date: string | null;
+  metadata: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface InvoiceSowLink {
+  id: number;
+  invoice_id: number;
+  sow_document_id: number;
+  allocated_amount: number;
+}
+
+export interface CreateProjectData {
+  client_id: number;
+  business_id: number;
+  name: string;
+  description: string;
+  status: ProjectStatus;
+  start_date: string;
+  end_date: string;
+}
+
+export interface MsaFieldValues {
+  jurisdiction: string;
+  liability_cap: string;
+  governing_law: string;
+  notice_period_days: number;
+  payment_due_days: number;
+}
+
+export interface SowFieldValues {
+  project_description: string;
+  scope: string;
+  out_of_scope: string;
+  milestones: string;
+  total_amount: number;
+  currency: string;
+  payment_terms: string;
+  start_date: string;
+  end_date: string;
+}
+
+export interface NdaFieldValues {
+  confidentiality_period_years: number;
+  exclusions: string;
+  governing_law: string;
+}
+
+export interface SlaFieldValues {
+  services_description: string;
+  uptime_percent: string;
+  response_time_critical: string;
+  response_time_high: string;
+  monthly_fee: number;
+  currency: string;
+  exclusions: string;
+  support_hours: string;
+}
+
+export interface CreateLegalDocumentData {
+  project_id: number | null;
+  client_id: number;
+  business_id: number;
+  doc_type: DocType;
+  title: string;
+  content_html: string;
+  metadata: string;
+  expiry_date?: string;
 }
 
 declare global {

@@ -57,7 +57,7 @@ function PreferencesTab({ activeBusiness, onBackup, backupLoading }: { activeBus
         <div style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '10px 14px' }}>
           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginBottom: 4 }}>Current location</div>
           <div style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--font-mono)', color: 'var(--color-text)', wordBreak: 'break-all' }}>
-            {savePath || 'Documents/InvoDesk/Invoices (default)'}
+            {savePath || 'Documents/BizDesk/Invoices (default)'}
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
@@ -77,7 +77,7 @@ function PreferencesTab({ activeBusiness, onBackup, backupLoading }: { activeBus
           )}
         </div>
         <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
-          Invoices are saved as: <span style={{ fontFamily: 'var(--font-mono)' }}>{savePath || 'Documents/InvoDesk/Invoices'}/Business Name - Invoices/</span>
+          Invoices are saved as: <span style={{ fontFamily: 'var(--font-mono)' }}>{savePath || 'Documents/BizDesk/Invoices'}/Business Name - Invoices/</span>
         </p>
       </div>
 
@@ -291,7 +291,7 @@ export const SettingsPage: React.FC = () => {
     setBackupLoading(true);
     try {
       const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-      const destPath = `${folder}\\InvoDesk-Backup-${ts}.zip`;
+      const destPath = `${folder}\\BizDesk-Backup-${ts}.zip`;
       const result = await window.electronAPI.invoice.exportBackup(destPath);
       addToast({ type: 'success', title: `Backup created — ${result.count} invoice${result.count !== 1 ? 's' : ''}`, message: result.zipPath });
       await window.electronAPI.shell.showInFolder(result.zipPath);

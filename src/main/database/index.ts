@@ -231,6 +231,53 @@ function runMigrations(db: SQLiteWrapper): void {
       updated_at TEXT DEFAULT (datetime('now')),
       FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
     );
+
+    CREATE TABLE IF NOT EXISTS projects (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      client_id INTEGER NOT NULL,
+      business_id INTEGER NOT NULL,
+      name TEXT NOT NULL,
+      description TEXT DEFAULT '',
+      status TEXT DEFAULT 'active',
+      start_date TEXT DEFAULT '',
+      end_date TEXT DEFAULT '',
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (client_id) REFERENCES saved_clients(id) ON DELETE CASCADE,
+      FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS legal_documents (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      project_id INTEGER DEFAULT NULL,
+      client_id INTEGER NOT NULL,
+      business_id INTEGER NOT NULL,
+      doc_type TEXT NOT NULL,
+      version INTEGER DEFAULT 1,
+      status TEXT DEFAULT 'draft',
+      title TEXT DEFAULT '',
+      content_html TEXT NOT NULL DEFAULT '',
+      pdf_path TEXT DEFAULT '',
+      generated_at TEXT DEFAULT (datetime('now')),
+      signed_at TEXT DEFAULT NULL,
+      expiry_date TEXT DEFAULT NULL,
+      metadata TEXT DEFAULT '{}',
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE SET NULL,
+      FOREIGN KEY (client_id) REFERENCES saved_clients(id) ON DELETE CASCADE,
+      FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS invoice_sow_links (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      invoice_id INTEGER NOT NULL,
+      sow_document_id INTEGER NOT NULL,
+      allocated_amount REAL DEFAULT 0,
+      UNIQUE(invoice_id, sow_document_id),
+      FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE,
+      FOREIGN KEY (sow_document_id) REFERENCES legal_documents(id) ON DELETE CASCADE
+    );
   `);
 
   // businesses new columns
@@ -260,4 +307,12 @@ function runMigrations(db: SQLiteWrapper): void {
 
   // soft delete
   addColumnSafe(db, 'invoices', 'is_deleted', 'INTEGER DEFAULT 0');
+
+  // saved_clients new columns (Full Company Suite)
+  addColumnSafe(db, 'saved_clients', 'pan', "TEXT DEFAULT ''");
+  addColumnSafe(db, 'saved_clients', 'website', "TEXT DEFAULT ''");
+  addColumnSafe(db, 'saved_clients', 'notes', "TEXT DEFAULT ''");
+
+  // invoices new columns (Full Company Suite)
+  addColumnSafe(db, 'invoices', 'project_id', 'INTEGER DEFAULT NULL');
 }

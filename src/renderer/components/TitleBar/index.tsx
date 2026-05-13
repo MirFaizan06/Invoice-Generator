@@ -6,7 +6,7 @@ export const TitleBar: React.FC = () => {
   return (
     <div className="titlebar">
       <div className="titlebar-drag-area">
-        <span className="titlebar-app-name">InvoiceGenerator</span>
+        <span className="titlebar-app-name">BizDesk</span>
       </div>
       <div className="titlebar-controls">
         <button className="titlebar-btn titlebar-min" onClick={() => window.electronAPI.window.minimize()} title="Minimize">

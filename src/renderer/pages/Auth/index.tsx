@@ -88,7 +88,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onAuthenticated, initialView
       <div className="auth-card">
         <div className="auth-brand">
           <div className="auth-brand-icon"><FileText size={18} color="#fff" /></div>
-          <div className="auth-brand-name">InvoDesk</div>
+          <div className="auth-brand-name">BizDesk</div>
         </div>
 
         {view === 'login' && (

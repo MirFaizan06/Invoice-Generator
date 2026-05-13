@@ -1,0 +1,305 @@
+.docgen-page {}
+
+/* ── Step indicator ───────────────────────────────────────── */
+.docgen-steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin-bottom: var(--space-6);
+}
+
+.docgen-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.docgen-step-num {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  color: var(--color-text-muted);
+  transition: all var(--transition-base);
+}
+.docgen-step.active .docgen-step-num {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+.docgen-step.done .docgen-step-num {
+  background: var(--color-success-light);
+  border-color: var(--color-success);
+  color: var(--color-success-dark);
+}
+
+.docgen-step-label {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+.docgen-step.active .docgen-step-label { color: var(--color-primary); font-weight: 600; }
+.docgen-step.done .docgen-step-label { color: var(--color-success-dark); }
+
+.docgen-step-connector {
+  flex: 1;
+  height: 2px;
+  background: var(--color-border);
+  min-width: 40px;
+  max-width: 80px;
+  margin-bottom: 18px;
+  transition: background var(--transition-base);
+}
+.docgen-step-connector.done { background: var(--color-success); }
+
+/* ── Wizard card ──────────────────────────────────────────── */
+.docgen-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  max-width: 720px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.docgen-step-content {
+  padding: var(--space-6) var(--space-7);
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.docgen-section-title {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+.docgen-section-desc {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin: 0;
+  margin-top: -8px;
+}
+
+/* ── Doc type cards ───────────────────────────────────────── */
+.docgen-type-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.docgen-type-card {
+  background: var(--color-surface-2);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  text-align: left;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-family: var(--font-sans);
+}
+.docgen-type-card:hover {
+  background: var(--color-primary-light);
+  border-color: var(--color-primary-border);
+}
+.docgen-type-card.selected {
+  background: var(--color-primary-light);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+}
+
+.docgen-type-icon {
+  color: var(--color-primary);
+  margin-bottom: var(--space-1);
+}
+.docgen-type-label {
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  letter-spacing: 0.5px;
+}
+.docgen-type-desc {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+/* ── Warning banner ───────────────────────────────────────── */
+.docgen-warning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-warning-light);
+  border: 1px solid var(--color-warning-border);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  font-size: var(--text-sm);
+  color: var(--color-warning-dark);
+}
+
+/* ── Select ───────────────────────────────────────────────── */
+.docgen-select {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  cursor: pointer;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+.docgen-select:hover { border-color: var(--color-border-hover); }
+.docgen-select:focus { border-color: var(--color-border-focus); }
+
+/* ── Inline form ──────────────────────────────────────────── */
+.docgen-inline-form {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+.docgen-inline-title {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+}
+.docgen-inline-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.docgen-inline-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.docgen-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 0;
+  font-family: var(--font-sans);
+  transition: color var(--transition-fast);
+}
+.docgen-link-btn:hover { color: var(--color-primary-dark); }
+
+/* ── Fields ───────────────────────────────────────────────── */
+.docgen-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex: 1;
+  overflow-y: auto;
+  max-height: 440px;
+  padding-right: 4px;
+}
+.docgen-fields-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* ── Loading ──────────────────────────────────────────────── */
+.docgen-loading {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  padding: var(--space-10) 0;
+}
+
+.docgen-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: docgen-spin 0.8s linear infinite;
+}
+@keyframes docgen-spin { to { transform: rotate(360deg); } }
+
+/* ── Preview ──────────────────────────────────────────────── */
+.docgen-preview-title {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-text);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.docgen-preview-container {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  background: #fff;
+  max-height: 420px;
+  overflow-y: auto;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.6;
+  color: #1a1a1a;
+  flex: 1;
+}
+
+/* ── Success ──────────────────────────────────────────────── */
+.docgen-success {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  text-align: center;
+  padding: var(--space-8) var(--space-6);
+}
+.docgen-success-icon { color: var(--color-success); }
+.docgen-success-title { font-size: var(--text-xl); font-weight: 700; color: var(--color-text); margin: 0; }
+.docgen-success-doc { font-size: var(--text-sm); color: var(--color-text-secondary); font-weight: 500; margin: 0; }
+.docgen-success-desc { font-size: var(--text-sm); color: var(--color-text-muted); margin: 0; }
+.docgen-success-actions { display: flex; gap: var(--space-3); margin-top: var(--space-3); }
+
+/* ── Actions row ──────────────────────────────────────────── */
+.docgen-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+  margin-top: auto;
+}
