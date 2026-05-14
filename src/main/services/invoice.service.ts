@@ -3,7 +3,8 @@ import path from 'path';
 import { app } from 'electron';
 import { getDB } from '../database/index';
 import { generateInvoiceHTML } from './template.service';
-import type { Invoice, InvoiceItem, CreateInvoiceData, InvoiceFilters } from '../../shared/types';
+import type { Invoice, InvoiceItem, CreateInvoiceData, InvoiceFilters, PaymentDetails } from '../../shared/types';
+import { AppPaths } from '../utils/paths';
 import { getBusinessById } from './business.service';
 import { getUpiForBusiness } from './upi.service';
 import { generateQRCode } from './qr.service';
@@ -267,15 +268,40 @@ export function deleteInvoice(id: number): void {
   getDB().prepare("UPDATE invoices SET is_deleted = 1, html_path = '', pdf_path = '', updated_at = datetime('now') WHERE id = ?").run(id);
 }
 
-export function markInvoicePaid(id: number): void {
+export function markInvoicePaid(id: number, details: PaymentDetails): void {
   const db = getDB();
   const invoice = getInvoiceById(id);
-  if (!invoice || invoice.status === 'paid') return;
+  if (!invoice) return;
 
-  db.prepare("UPDATE invoices SET status = 'paid', updated_at = datetime('now') WHERE id = ?").run(id);
+  // Copy proof file to BizDesk storage if provided
+  let storedProofPath = '';
+  if (details.payment_proof_path && fs.existsSync(details.payment_proof_path)) {
+    const proofsDir = path.join(AppPaths.dataDir, 'payment-proofs');
+    if (!fs.existsSync(proofsDir)) fs.mkdirSync(proofsDir, { recursive: true });
+    const ext = path.extname(details.payment_proof_path);
+    const destName = `invoice-${id}-proof-${Date.now()}${ext}`;
+    const destPath = path.join(proofsDir, destName);
+    fs.copyFileSync(details.payment_proof_path, destPath);
+    storedProofPath = destPath;
+  }
+
+  const amountPaid = details.amount_paid ?? invoice.total;
+  const newStatus = amountPaid >= invoice.total ? 'paid' : 'partial';
+
+  db.prepare(`
+    UPDATE invoices
+    SET status = ?, amount_paid = ?, paid_via = ?, paid_on = ?, transaction_id = ?,
+        payment_notes = ?, payment_proof_path = ?, full_payment_due_date = ?, updated_at = datetime('now')
+    WHERE id = ?
+  `).run(
+    newStatus, amountPaid, details.paid_via, details.paid_on, details.transaction_id,
+    details.payment_notes, storedProofPath || invoice.payment_proof_path,
+    details.full_payment_due_date ?? '', id
+  );
+
+  const desc = `Payment from ${invoice.client_name}${details.paid_via ? ` via ${details.paid_via}` : ''}${newStatus === 'partial' ? ` (partial ₹${amountPaid})` : ''}`;
   db.prepare('INSERT INTO transactions (invoice_id, business_id, type, amount, description, date) VALUES (?, ?, ?, ?, ?, ?)').run(
-    id, invoice.business_id, 'revenue', invoice.total,
-    `Payment from ${invoice.client_name}`, invoice.date
+    id, invoice.business_id, 'revenue', amountPaid, desc, details.paid_on || invoice.date
   );
 }
 
@@ -284,7 +310,7 @@ export function markInvoiceUnpaid(id: number): void {
   const invoice = getInvoiceById(id);
   if (!invoice || invoice.status !== 'paid') return;
 
-  db.prepare("UPDATE invoices SET status = 'unpaid', updated_at = datetime('now') WHERE id = ?").run(id);
+  db.prepare("UPDATE invoices SET status = 'unpaid', amount_paid = 0, paid_via = '', paid_on = '', transaction_id = '', payment_notes = '', payment_proof_path = '', updated_at = datetime('now') WHERE id = ?").run(id);
   db.prepare('DELETE FROM transactions WHERE invoice_id = ? AND type = ?').run(id, 'revenue');
 }
 

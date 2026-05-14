@@ -16,7 +16,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     create: (data: unknown) => ipcRenderer.invoke('invoice:create', data),
     update: (id: number, data: unknown) => ipcRenderer.invoke('invoice:update', id, data),
     delete: (id: number) => ipcRenderer.invoke('invoice:delete', id),
-    markPaid: (id: number) => ipcRenderer.invoke('invoice:markPaid', id),
+    markPaid: (id: number, details: unknown) => ipcRenderer.invoke('invoice:markPaid', id, details),
     markUnpaid: (id: number) => ipcRenderer.invoke('invoice:markUnpaid', id),
     duplicate: (id: number) => ipcRenderer.invoke('invoice:duplicate', id),
     generatePDF: (id: number) => ipcRenderer.invoke('invoice:generatePDF', id),
@@ -98,5 +98,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   system: {
     restartApp: () => ipcRenderer.invoke('system:restartApp'),
     getNetworkStatus: () => ipcRenderer.invoke('system:getNetworkStatus'),
+  },
+  bundle: {
+    createForClient: (clientId: number, businessId: number, format: string, destFolder: string) =>
+      ipcRenderer.invoke('bundle:createForClient', clientId, businessId, format, destFolder),
   },
 });

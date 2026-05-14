@@ -14,6 +14,8 @@ import { registerProjectsIPC } from './ipc/projects.ipc';
 import { registerDocumentsIPC } from './ipc/documents.ipc';
 import { registerMailIPC } from './ipc/mail.ipc';
 import { registerSystemIPC } from './ipc/system.ipc';
+import { registerBundleIPC } from './ipc/bundle.ipc';
+import { runReminderCheck } from './services/reminder.service';
 
 const isDev = !app.isPackaged;
 let mainWindow: BrowserWindow | null = null;
@@ -99,7 +101,14 @@ app.whenReady().then(async () => {
   registerDocumentsIPC();
   registerMailIPC();
   registerSystemIPC();
+  registerBundleIPC();
   createWindow();
+
+  // Payment reminder worker — runs 10s after startup, then every 24h
+  setTimeout(() => {
+    runReminderCheck().catch(() => {});
+    setInterval(() => runReminderCheck().catch(() => {}), 24 * 60 * 60 * 1000);
+  }, 10000);
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();

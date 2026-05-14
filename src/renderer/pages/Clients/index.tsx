@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Edit2, Trash2, Mail, Phone, Globe, FileText, Briefcase } from 'lucide-react';
+import { Plus, Edit2, Trash2, Mail, Phone, Globe, FileText, Briefcase, Archive } from 'lucide-react';
 import { Button } from '../../components/UI/Button';
 import { Input, TextArea } from '../../components/UI/Input';
 import { Badge } from '../../components/UI/Badge';
@@ -43,6 +43,11 @@ export const ClientsPage: React.FC = () => {
   const [formData, setFormData] = useState<ClientFormData>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [clientStats, setClientStats] = useState<Record<number, { projects: number; documents: number }>>({});
+
+  // Client bundle
+  const [bundleTarget, setBundleTarget] = useState<SavedClient | null>(null);
+  const [bundleFormat, setBundleFormat] = useState<'zip' | 'rar'>('zip');
+  const [bundleLoading, setBundleLoading] = useState(false);
 
   const load = useCallback(async () => {
     if (!activeBusiness) return;
@@ -140,6 +145,24 @@ export const ClientsPage: React.FC = () => {
     }
   };
 
+  const handleBundle = async () => {
+    if (!bundleTarget || !activeBusiness) return;
+    const folder = await window.electronAPI.shell.pickFolder('Choose export destination');
+    if (!folder) return;
+    setBundleLoading(true);
+    try {
+      const result = await window.electronAPI.bundle.createForClient(bundleTarget.id, activeBusiness.id, bundleFormat, folder);
+      setBundleTarget(null);
+      if (result.warning) addToast({ type: 'warning', title: `Bundle exported (${result.format.toUpperCase()})`, message: result.warning });
+      else addToast({ type: 'success', title: `Bundle exported!`, message: `${result.fileCount} file${result.fileCount !== 1 ? 's' : ''} → ${result.filePath.split(/[\\/]/).pop()}` });
+      window.electronAPI.shell.showInFolder(result.filePath);
+    } catch (err) {
+      addToast({ type: 'error', title: 'Bundle failed', message: String(err) });
+    } finally {
+      setBundleLoading(false);
+    }
+  };
+
   const field = (key: keyof ClientFormData) => (
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
       setFormData((f) => ({ ...f, [key]: e.target.value }))
@@ -181,6 +204,9 @@ export const ClientsPage: React.FC = () => {
                     {client.name.charAt(0).toUpperCase()}
                   </div>
                   <div className="client-card-actions">
+                    <button className="action-btn" title="Export Client Bundle (ZIP/RAR)" onClick={() => { setBundleTarget(client); setBundleFormat('zip'); }}>
+                      <Archive size={13} />
+                    </button>
                     <button className="action-btn" title="Edit" onClick={() => openEditModal(client)}>
                       <Edit2 size={13} />
                     </button>
@@ -310,6 +336,53 @@ export const ClientsPage: React.FC = () => {
             rows={2}
           />
         </div>
+      </Modal>
+
+      {/* Client Bundle Export Modal */}
+      <Modal
+        isOpen={!!bundleTarget}
+        onClose={() => setBundleTarget(null)}
+        title={`Export Bundle — ${bundleTarget?.name ?? ''}`}
+        size="sm"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setBundleTarget(null)}>Cancel</Button>
+            <Button variant="primary" icon={<Archive size={14} />} onClick={handleBundle} loading={bundleLoading}>Export Bundle</Button>
+          </>
+        }
+      >
+        {bundleTarget && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', margin: 0 }}>
+              Creates a single archive containing all invoices and legal documents (MSA, SOW, NDA, SLA) for <strong>{bundleTarget.name}</strong>, plus a <code>README.txt</code> describing each file.
+            </p>
+            <div>
+              <div style={{ fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--color-text-secondary)', marginBottom: 8 }}>Export Format</div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {(['zip', 'rar'] as const).map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => setBundleFormat(f)}
+                    style={{
+                      flex: 1, padding: '10px 0', border: `2px solid ${bundleFormat === f ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                      borderRadius: 'var(--radius-md)', background: bundleFormat === f ? 'var(--color-primary-light)' : 'var(--color-surface)',
+                      color: bundleFormat === f ? 'var(--color-primary)' : 'var(--color-text-secondary)', fontWeight: 700,
+                      fontSize: 'var(--text-sm)', cursor: 'pointer', fontFamily: 'var(--font-mono)', textTransform: 'uppercase',
+                    }}
+                  >{f}</button>
+                ))}
+              </div>
+              {bundleFormat === 'rar' && (
+                <div style={{ marginTop: 8, fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>
+                  RAR requires WinRAR or 7-Zip to be installed. Falls back to ZIP automatically if unavailable.
+                </div>
+              )}
+            </div>
+            <div style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', padding: '8px 12px', fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>
+              Only PDFs that have already been generated are included. Generate PDFs from History and Documents first.
+            </div>
+          </div>
+        )}
       </Modal>
 
       {/* Delete Confirmation Modal */}

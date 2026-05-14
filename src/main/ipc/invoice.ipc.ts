@@ -13,7 +13,7 @@ export function registerInvoiceIPC(): void {
   ipcMain.handle('invoice:create', (_, data) => createInvoice(data));
   ipcMain.handle('invoice:update', (_, id, data) => updateInvoice(id, data));
   ipcMain.handle('invoice:delete', (_, id) => deleteInvoice(id));
-  ipcMain.handle('invoice:markPaid', (_, id) => markInvoicePaid(id));
+  ipcMain.handle('invoice:markPaid', (_, id, details) => markInvoicePaid(id, details));
   ipcMain.handle('invoice:markUnpaid', (_, id) => markInvoiceUnpaid(id));
   ipcMain.handle('invoice:duplicate', (_, id) => duplicateInvoice(id));
   ipcMain.handle('invoice:getNextNumber', (_, businessId) => getNextInvoiceNumber(businessId));

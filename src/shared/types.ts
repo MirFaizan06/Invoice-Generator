@@ -67,12 +67,30 @@ export interface Invoice {
   bank_ifsc: string;
   bank_holder: string;
   notes: string;
-  status: 'draft' | 'unpaid' | 'paid' | 'cancelled';
+  status: 'draft' | 'unpaid' | 'paid' | 'partial' | 'cancelled';
   html_path: string;
   pdf_path: string;
+  paid_via: string;
+  paid_on: string;
+  transaction_id: string;
+  payment_notes: string;
+  payment_proof_path: string;
+  amount_paid: number;
+  full_payment_due_date: string;
+  last_reminder_sent: string;
   items?: InvoiceItem[];
   created_at: string;
   updated_at: string;
+}
+
+export interface PaymentDetails {
+  paid_via: string;
+  paid_on: string;
+  transaction_id: string;
+  payment_notes: string;
+  amount_paid: number;
+  full_payment_due_date?: string;
+  payment_proof_path?: string;
 }
 
 export interface Transaction {
@@ -106,7 +124,7 @@ export interface FinanceSummary {
 
 export interface InvoiceFilters {
   search?: string;
-  status?: 'all' | 'draft' | 'paid' | 'unpaid' | 'cancelled';
+  status?: 'all' | 'draft' | 'paid' | 'partial' | 'unpaid' | 'cancelled';
   business_id?: number;
   dateFrom?: string;
   dateTo?: string;
@@ -199,7 +217,7 @@ export interface ElectronAPI {
     create: (data: CreateInvoiceData) => Promise<Invoice>;
     update: (id: number, data: Partial<CreateInvoiceData>) => Promise<Invoice>;
     delete: (id: number) => Promise<void>;
-    markPaid: (id: number) => Promise<void>;
+    markPaid: (id: number, details: PaymentDetails) => Promise<void>;
     markUnpaid: (id: number) => Promise<void>;
     duplicate: (id: number) => Promise<Invoice>;
     generatePDF: (id: number) => Promise<string>;
@@ -279,6 +297,9 @@ export interface ElectronAPI {
   system: {
     restartApp: () => Promise<void>;
     getNetworkStatus: () => Promise<boolean>;
+  };
+  bundle: {
+    createForClient: (clientId: number, businessId: number, format: string, destFolder: string) => Promise<{ filePath: string; fileCount: number; format: string; warning?: string }>;
   };
 }
 

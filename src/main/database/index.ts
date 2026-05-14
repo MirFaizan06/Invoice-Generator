@@ -330,4 +330,14 @@ function runMigrations(db: SQLiteWrapper): void {
 
   // invoices new columns (Full Company Suite)
   addColumnSafe(db, 'invoices', 'project_id', 'INTEGER DEFAULT NULL');
+
+  // invoices payment confirmation columns
+  addColumnSafe(db, 'invoices', 'paid_via', "TEXT DEFAULT ''");
+  addColumnSafe(db, 'invoices', 'paid_on', "TEXT DEFAULT ''");
+  addColumnSafe(db, 'invoices', 'transaction_id', "TEXT DEFAULT ''");
+  addColumnSafe(db, 'invoices', 'payment_notes', "TEXT DEFAULT ''");
+  addColumnSafe(db, 'invoices', 'payment_proof_path', "TEXT DEFAULT ''");
+  addColumnSafe(db, 'invoices', 'amount_paid', 'REAL DEFAULT 0');
+  addColumnSafe(db, 'invoices', 'full_payment_due_date', "TEXT DEFAULT ''");
+  addColumnSafe(db, 'invoices', 'last_reminder_sent', "TEXT DEFAULT ''");
 }
