@@ -1,19 +1,19 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, Eye, Trash2, Copy, CheckCircle, XCircle, Download, ChevronDown } from 'lucide-react';
+import { Search, Filter, Eye, Trash2, Copy, CheckCircle, XCircle, Download, ChevronDown, Send } from 'lucide-react';
 import { Button } from '../../components/UI/Button';
 import { Input } from '../../components/UI/Input';
 import { Badge } from '../../components/UI/Badge';
 import { Modal } from '../../components/UI/Modal';
-import { useAppStore } from '../../store/app.store';
 import { useBusinessStore } from '../../store/business.store';
+import { useAppStore } from '../../store/app.store';
 import type { Invoice } from '@shared/types';
 import './History.css';
 
 export const HistoryPage: React.FC = () => {
   const navigate = useNavigate();
   const addToast = useAppStore((s) => s.addToast);
-  const { businesses } = useBusinessStore();
+  const { businesses, activeBusiness } = useBusinessStore();
   const getBusinessName = (id: number) => businesses.find((b) => b.id === id)?.name || '—';
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,6 +24,10 @@ export const HistoryPage: React.FC = () => {
   const [deleteTarget, setDeleteTarget] = useState<Invoice | null>(null);
   const [deleteStep, setDeleteStep] = useState<1 | 2>(1);
   const [pdfLoading, setPdfLoading] = useState<number | null>(null);
+  const [emailTarget, setEmailTarget] = useState<Invoice | null>(null);
+  const [emailTo, setEmailTo] = useState('');
+  const [emailToName, setEmailToName] = useState('');
+  const [emailSending, setEmailSending] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -84,6 +88,52 @@ export const HistoryPage: React.FC = () => {
       addToast({ type: 'error', title: 'PDF failed', message: String(err) });
     } finally {
       setPdfLoading(null);
+    }
+  };
+
+  const openEmailModal = (inv: Invoice) => {
+    setEmailTarget(inv);
+    setEmailTo(inv.client_email || '');
+    setEmailToName(inv.client_name || '');
+  };
+
+  const handleSendEmail = async () => {
+    if (!emailTarget || !activeBusiness) return;
+    if (!emailTo.trim()) { addToast({ type: 'error', title: 'Enter recipient email' }); return; }
+    setEmailSending(true);
+    const subject = `Invoice ${emailTarget.invoice_number} from ${activeBusiness.name}`;
+    const dueDate = emailTarget.due_date ? new Date(emailTarget.due_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' }) : '—';
+    const bodyHtml = `<p>Dear ${emailToName || emailTarget.client_name},</p>
+<p>Please find the details for invoice <strong>${emailTarget.invoice_number}</strong> below.</p>
+<table style="border-collapse:collapse;width:100%;max-width:400px;">
+  <tr><td style="padding:6px 0;color:#6B7280;">Invoice Number</td><td style="padding:6px 0;font-weight:600;">${emailTarget.invoice_number}</td></tr>
+  <tr><td style="padding:6px 0;color:#6B7280;">Date</td><td style="padding:6px 0;">${new Date(emailTarget.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' })}</td></tr>
+  <tr><td style="padding:6px 0;color:#6B7280;">Due Date</td><td style="padding:6px 0;">${dueDate}</td></tr>
+  <tr><td style="padding:6px 0;color:#6B7280;">Amount</td><td style="padding:6px 0;font-weight:600;">₹${emailTarget.total.toLocaleString('en-IN')}</td></tr>
+  <tr><td style="padding:6px 0;color:#6B7280;">Status</td><td style="padding:6px 0;">${emailTarget.status.charAt(0).toUpperCase() + emailTarget.status.slice(1)}</td></tr>
+</table>
+<p>Please process the payment at your earliest convenience. Feel free to reach out if you have any questions.</p>
+<p>Regards,<br/>${activeBusiness.owner_name}<br/>${activeBusiness.name}</p>`;
+    try {
+      const result = await window.electronAPI.mail.send({
+        to: emailTo.trim(),
+        toName: emailToName.trim(),
+        subject,
+        bodyHtml,
+        businessId: activeBusiness.id,
+        relatedType: 'invoice',
+        relatedId: emailTarget.id,
+      });
+      if (result.success) {
+        addToast({ type: 'success', title: 'Email sent!', message: `Sent to ${emailTo}` });
+        setEmailTarget(null);
+      } else {
+        addToast({ type: 'error', title: 'Failed to send email', message: result.error });
+      }
+    } catch (err) {
+      addToast({ type: 'error', title: 'Failed to send email', message: String(err) });
+    } finally {
+      setEmailSending(false);
     }
   };
 
@@ -184,6 +234,9 @@ export const HistoryPage: React.FC = () => {
                       <button className="action-btn" title="PDF" onClick={() => handlePDF(inv)} disabled={pdfLoading === inv.id}>
                         <Download size={13} />
                       </button>
+                      <button className="action-btn" title="Send Email" onClick={() => openEmailModal(inv)}>
+                        <Send size={13} />
+                      </button>
                       <button className="action-btn" title="Duplicate" onClick={() => handleDuplicate(inv)}>
                         <Copy size={13} />
                       </button>
@@ -198,6 +251,42 @@ export const HistoryPage: React.FC = () => {
           </table>
         )}
       </div>
+
+      {/* Email Modal */}
+      <Modal
+        isOpen={!!emailTarget}
+        onClose={() => setEmailTarget(null)}
+        title="Send Invoice via Email"
+        size="sm"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setEmailTarget(null)}>Cancel</Button>
+            <Button variant="primary" icon={<Send size={14} />} onClick={handleSendEmail} loading={emailSending}>Send</Button>
+          </>
+        }
+      >
+        {emailTarget && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <Input
+              label="Recipient Name"
+              placeholder="Client name"
+              value={emailToName}
+              onChange={(e) => setEmailToName(e.target.value)}
+            />
+            <Input
+              label="Recipient Email"
+              type="email"
+              placeholder="client@example.com"
+              value={emailTo}
+              onChange={(e) => setEmailTo(e.target.value)}
+            />
+            <div style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', padding: '8px 12px', fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>
+              <div style={{ fontWeight: 600, marginBottom: 2, color: 'var(--color-text-secondary)' }}>Subject (auto-generated)</div>
+              Invoice {emailTarget.invoice_number} · ₹{emailTarget.total.toLocaleString('en-IN')}
+            </div>
+          </div>
+        )}
+      </Modal>
 
       <Modal
         isOpen={!!deleteTarget}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileText, Building2, CreditCard, CheckCircle, ChevronRight, ChevronLeft, Layout, FolderOpen } from 'lucide-react';
+import { FileText, Building2, CreditCard, CheckCircle, ChevronRight, ChevronLeft, Layout, FolderOpen, Mail, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '../../components/UI/Button';
 import { Input } from '../../components/UI/Input';
 import { PhoneInput } from '../../components/UI/PhoneInput';
@@ -47,7 +47,8 @@ const steps = [
   { id: 3, title: 'Payment Setup', icon: <CreditCard size={24} /> },
   { id: 4, title: 'Template', icon: <Layout size={24} /> },
   { id: 5, title: 'Save Location', icon: <FolderOpen size={24} /> },
-  { id: 6, title: 'Complete', icon: <CheckCircle size={24} /> },
+  { id: 6, title: 'Email Setup', icon: <Mail size={24} /> },
+  { id: 7, title: 'Complete', icon: <CheckCircle size={24} /> },
 ];
 
 export const OnboardingPage: React.FC<OnboardingProps> = ({ onComplete }) => {
@@ -59,6 +60,9 @@ export const OnboardingPage: React.FC<OnboardingProps> = ({ onComplete }) => {
 
   const [invoiceSavePath, setInvoiceSavePath] = useState('');
   const defaultSavePath = 'Documents/BizDesk/Invoices (default)';
+  const [gmailUser, setGmailUser] = useState('');
+  const [gmailPass, setGmailPass] = useState('');
+  const [gmailGuideOpen, setGmailGuideOpen] = useState(false);
 
   const [form, setForm] = useState<FormData>({
     owner_name: '',
@@ -144,6 +148,12 @@ export const OnboardingPage: React.FC<OnboardingProps> = ({ onComplete }) => {
       if (invoiceSavePath) {
         await window.electronAPI.settings.set('invoice_save_path', invoiceSavePath);
       }
+      if (gmailUser.trim()) {
+        await window.electronAPI.settings.set('gmail_user', gmailUser.trim());
+      }
+      if (gmailPass.trim()) {
+        await window.electronAPI.settings.set('gmail_pass', gmailPass.trim());
+      }
       await window.electronAPI.settings.set('onboarding_complete', 'true');
       addToast({ type: 'success', title: 'Setup complete!', message: `Welcome, ${form.owner_name}!` });
       onComplete();
@@ -180,7 +190,7 @@ export const OnboardingPage: React.FC<OnboardingProps> = ({ onComplete }) => {
 
         <div className="onboarding-copy">
           <p>Built by <strong>Tech Bytes Design</strong></p>
-          <p>Offline-first · Secure · Fast</p>
+          <p>Local-first · Private · Fast</p>
         </div>
       </div>
 
@@ -206,7 +216,7 @@ export const OnboardingPage: React.FC<OnboardingProps> = ({ onComplete }) => {
                   'UPI QR code payment support',
                   'Multi-business profile support',
                   'Client address book for quick invoicing',
-                  '100% offline — your data stays local',
+                  'Local-first — your data stays on your device',
                 ].map((f) => (
                   <div key={f} className="onboarding-feature">
                     <CheckCircle size={15} className="onboarding-feature-icon" />
@@ -348,6 +358,61 @@ export const OnboardingPage: React.FC<OnboardingProps> = ({ onComplete }) => {
           )}
 
           {step === 6 && (
+            <div className="onboarding-step-content">
+              <h1 className="onboarding-title">Email Setup (Optional)</h1>
+              <p className="onboarding-desc">Connect your Gmail to send invoices and documents directly to clients from BizDesk.</p>
+              <div className="onboarding-form">
+                <Input
+                  label="Gmail Address"
+                  placeholder="yourname@gmail.com"
+                  type="email"
+                  value={gmailUser}
+                  onChange={(e) => setGmailUser(e.target.value)}
+                />
+                <Input
+                  label="App Password"
+                  placeholder="xxxx xxxx xxxx xxxx"
+                  type="password"
+                  value={gmailPass}
+                  onChange={(e) => setGmailPass(e.target.value)}
+                  hint="Not your regular Gmail password — use a Google App Password"
+                />
+              </div>
+              <div style={{ marginTop: 8, border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+                <button
+                  onClick={() => setGmailGuideOpen((o) => !o)}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--color-surface-2)', border: 'none', cursor: 'pointer', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--color-text)', fontFamily: 'var(--font-sans)' }}
+                >
+                  How to get an App Password?
+                  {gmailGuideOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                </button>
+                {gmailGuideOpen && (
+                  <div style={{ padding: '12px 14px', background: 'var(--color-surface)', borderTop: '1px solid var(--color-border)' }}>
+                    <ol style={{ margin: 0, padding: '0 0 0 18px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {[
+                        'Open myaccount.google.com',
+                        'Go to Security (left sidebar)',
+                        'Enable 2-Step Verification if not already enabled',
+                        'Go back to Security → scroll down to "App passwords"',
+                        'Click "Create app password" → name it "BizDesk" → click Create',
+                        'Copy the 16-character password and paste it above',
+                      ].map((s, i) => (
+                        <li key={i} style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>{s}</li>
+                      ))}
+                    </ol>
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={next}
+                style={{ marginTop: 10, background: 'none', border: 'none', color: 'var(--color-text-muted)', fontSize: 'var(--text-sm)', cursor: 'pointer', textDecoration: 'underline', alignSelf: 'flex-start', padding: 0, fontFamily: 'var(--font-sans)' }}
+              >
+                Skip for now — I'll set this up later in Settings
+              </button>
+            </div>
+          )}
+
+          {step === 7 && (
             <div className="onboarding-step-content">
               <div className="onboarding-complete-icon">
                 <CheckCircle size={48} />

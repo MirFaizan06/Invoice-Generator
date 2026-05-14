@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, Check, X, Star, Building2, CreditCard, Sliders, Layout, Lock, FolderOpen, Archive, AlertTriangle } from 'lucide-react';
+import { Plus, Trash2, Edit2, Check, X, Star, Building2, CreditCard, Sliders, Layout, Lock, FolderOpen, Archive, AlertTriangle, Mail, ChevronDown, ChevronUp, FileInput } from 'lucide-react';
 import { PhoneInput } from '../../components/UI/PhoneInput';
 import { Button } from '../../components/UI/Button';
 import { Input } from '../../components/UI/Input';
@@ -102,7 +102,7 @@ function PreferencesTab({ activeBusiness, onBackup, backupLoading }: { activeBus
 export const SettingsPage: React.FC = () => {
   const { businesses, activeBusiness, refresh } = useBusinessStore();
   const addToast = useAppStore((s) => s.addToast);
-  const [activeTab, setActiveTab] = useState<'business' | 'upi' | 'template' | 'preferences' | 'security'>('business');
+  const [activeTab, setActiveTab] = useState<'business' | 'upi' | 'template' | 'preferences' | 'security' | 'email'>('business');
   const [upiIds, setUpiIds] = useState<UpiId[]>([]);
   const [showBusinessModal, setShowBusinessModal] = useState(false);
   const [showUpiModal, setShowUpiModal] = useState(false);
@@ -117,6 +117,22 @@ export const SettingsPage: React.FC = () => {
   const [backupLoading, setBackupLoading] = useState(false);
   const [authSuccess, setAuthSuccess] = useState('');
 
+  // Email settings state
+  const [gmailUser, setGmailUser] = useState('');
+  const [gmailPass, setGmailPass] = useState('');
+  const [emailSaving, setEmailSaving] = useState(false);
+  const [emailSaved, setEmailSaved] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(false);
+
+  // Import invoice state
+  const [importLoading, setImportLoading] = useState(false);
+  const [importResult, setImportResult] = useState<{ success: boolean; message: string } | null>(null);
+
+  // Remove auth modal state
+  const [showRemoveAuthModal, setShowRemoveAuthModal] = useState(false);
+  const [removeAuthPassword, setRemoveAuthPassword] = useState('');
+  const [removeAuthError, setRemoveAuthError] = useState('');
+
   const [bizForm, setBizForm] = useState({ name: '', owner_name: '', email: '', phone: '', address: '', gst: '', pan: '', cin: '', invoice_prefix: 'TBD/INV', default_tax: '18' });
   const [upiForm, setUpiForm] = useState({ label: '', upi_id: '', upi_name: '', is_primary: false });
 
@@ -125,6 +141,7 @@ export const SettingsPage: React.FC = () => {
       window.electronAPI.upi.getForBusiness(activeBusiness.id).then(setUpiIds);
     }
     window.electronAPI.auth.isSetup().then(setAuthSetup);
+    window.electronAPI.settings.get('gmail_user').then((v) => { if (v) setGmailUser(v); });
   }, [activeBusiness]);
 
   const openBizModal = (b?: Business) => {
@@ -258,10 +275,60 @@ export const SettingsPage: React.FC = () => {
     else { setAuthError('Current password is incorrect'); }
   };
 
-  const handleRemoveAuth = async () => {
+  const handleRemoveAuth = () => {
+    setRemoveAuthPassword('');
+    setRemoveAuthError('');
+    setShowRemoveAuthModal(true);
+  };
+
+  const handleConfirmRemoveAuth = async () => {
+    setRemoveAuthError('');
+    if (!removeAuthPassword) { setRemoveAuthError('Enter your current password'); return; }
+    const ok = await window.electronAPI.auth.verify(removeAuthPassword);
+    if (!ok) { setRemoveAuthError('Incorrect password'); return; }
     await window.electronAPI.auth.reset();
     setAuthSetup(false);
+    setShowRemoveAuthModal(false);
+    setRemoveAuthPassword('');
     addToast({ type: 'success', title: 'Password protection removed' });
+  };
+
+  const handleSaveEmailSettings = async () => {
+    setEmailSaving(true);
+    setEmailSaved(false);
+    try {
+      await window.electronAPI.settings.set('gmail_user', gmailUser);
+      await window.electronAPI.settings.set('gmail_pass', gmailPass);
+      setEmailSaved(true);
+    } catch {
+      addToast({ type: 'error', title: 'Failed to save email settings' });
+    } finally {
+      setEmailSaving(false);
+    }
+  };
+
+  const handleImportInvoice = async () => {
+    setImportResult(null);
+    const filePath = await window.electronAPI.shell.pickFile({
+      title: 'Select Invoice HTML',
+      filters: [{ name: 'HTML Files', extensions: ['html'] }],
+    });
+    if (!filePath) return;
+    setImportLoading(true);
+    try {
+      const content = await window.electronAPI.shell.readFile(filePath);
+      if (!content) { setImportResult({ success: false, message: 'Could not read the selected file' }); setImportLoading(false); return; }
+      const result = await window.electronAPI.invoice.importFromHTML(content);
+      if (result.success && result.invoice) {
+        setImportResult({ success: true, message: `Invoice imported successfully! Invoice #${result.invoice.invoice_number} added to history.` });
+      } else {
+        setImportResult({ success: false, message: result.error || 'Import failed' });
+      }
+    } catch (err) {
+      setImportResult({ success: false, message: String(err) });
+    } finally {
+      setImportLoading(false);
+    }
   };
 
   const handleSetupAuth = async () => {
@@ -308,6 +375,7 @@ export const SettingsPage: React.FC = () => {
     { id: 'template', label: 'Templates', icon: <Layout size={15} /> },
     { id: 'preferences', label: 'Preferences', icon: <Sliders size={15} /> },
     { id: 'security', label: 'Security', icon: <Lock size={15} /> },
+    { id: 'email', label: 'Email', icon: <Mail size={15} /> },
   ] as const;
 
   return (
@@ -521,6 +589,110 @@ export const SettingsPage: React.FC = () => {
           {activeTab === 'preferences' && activeBusiness && (
             <PreferencesTab activeBusiness={activeBusiness} onBackup={handleBackup} backupLoading={backupLoading} />
           )}
+
+          {activeTab === 'email' && (
+            <div style={{ maxWidth: 520 }}>
+              {/* Gmail SMTP */}
+              <h3 className="settings-section-title" style={{ marginBottom: 6 }}>Gmail SMTP</h3>
+              <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', marginBottom: 16, lineHeight: 1.6 }}>
+                BizDesk uses your Gmail account to send professional emails to clients. Your credentials are stored locally and never leave your device.
+              </p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 16 }}>
+                <Input
+                  label="Gmail Address"
+                  placeholder="yourname@gmail.com"
+                  type="email"
+                  value={gmailUser}
+                  onChange={(e) => { setGmailUser(e.target.value); setEmailSaved(false); }}
+                />
+                <Input
+                  label="App Password"
+                  placeholder="xxxx xxxx xxxx xxxx"
+                  type="password"
+                  value={gmailPass}
+                  onChange={(e) => { setGmailPass(e.target.value); setEmailSaved(false); }}
+                  hint="Not your regular Gmail password — use a Google App Password"
+                />
+              </div>
+
+              <Button variant="primary" onClick={handleSaveEmailSettings} loading={emailSaving}>
+                Save Email Settings
+              </Button>
+
+              {emailSaved && (
+                <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 6, padding: '10px 14px', fontSize: 'var(--text-sm)', color: '#166534' }}>
+                    Settings saved. Restart the app for changes to take effect.
+                  </div>
+                  <Button variant="secondary" onClick={() => window.electronAPI.system.restartApp()}>
+                    Restart Now
+                  </Button>
+                </div>
+              )}
+
+              {/* Setup Guide */}
+              <div style={{ marginTop: 24, border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+                <button
+                  onClick={() => setGuideOpen((o) => !o)}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', background: 'var(--color-surface-2)', border: 'none', cursor: 'pointer', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--color-text)', fontFamily: 'var(--font-sans)' }}
+                >
+                  How to get an App Password?
+                  {guideOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                </button>
+                {guideOpen && (
+                  <div style={{ padding: '14px 16px', background: 'var(--color-surface)', borderTop: '1px solid var(--color-border)' }}>
+                    <ol style={{ margin: 0, padding: '0 0 0 18px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {[
+                        'Open Google Account settings at myaccount.google.com',
+                        'Go to Security (left sidebar)',
+                        'Enable 2-Step Verification if not already enabled',
+                        'Go back to Security — scroll down to "App passwords" (appears only after 2FA is enabled)',
+                        'Click "Create app password" → choose name "BizDesk" → click Create',
+                        'Copy the 16-character password (spaces don\'t matter)',
+                        'Paste it in the "App Password" field above',
+                      ].map((step, i) => (
+                        <li key={i} style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
+                          {step}
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                )}
+              </div>
+
+              {/* Import Invoice */}
+              <div style={{ marginTop: 36, borderTop: '1px solid var(--color-border)', paddingTop: 24 }}>
+                <h3 className="settings-section-title" style={{ marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <FileInput size={15} />
+                  Import Invoice
+                </h3>
+                <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', marginBottom: 14, lineHeight: 1.6 }}>
+                  Import an invoice from an HTML file generated by this app. The invoice will be added to your history.
+                </p>
+                <Button
+                  variant="secondary"
+                  onClick={handleImportInvoice}
+                  loading={importLoading}
+                >
+                  Select Invoice HTML File
+                </Button>
+                {importResult && (
+                  <div style={{
+                    marginTop: 12,
+                    background: importResult.success ? '#F0FDF4' : '#FEF2F2',
+                    border: `1px solid ${importResult.success ? '#BBF7D0' : '#FECACA'}`,
+                    borderRadius: 6,
+                    padding: '10px 14px',
+                    fontSize: 'var(--text-sm)',
+                    color: importResult.success ? '#166534' : '#991B1B',
+                  }}>
+                    {importResult.message}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -576,6 +748,35 @@ export const SettingsPage: React.FC = () => {
         <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>
           Delete <strong>{deleteTarget?.name}</strong>? This cannot be undone.
         </p>
+      </Modal>
+
+      {/* Remove Auth Modal */}
+      <Modal
+        isOpen={showRemoveAuthModal}
+        onClose={() => setShowRemoveAuthModal(false)}
+        title="Confirm Password Removal"
+        size="sm"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setShowRemoveAuthModal(false)}>Cancel</Button>
+            <Button variant="danger" onClick={handleConfirmRemoveAuth}>Remove Protection</Button>
+          </>
+        }
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <Input
+            label="Enter current password to confirm"
+            type="password"
+            placeholder="Current password"
+            value={removeAuthPassword}
+            onChange={(e) => { setRemoveAuthPassword(e.target.value); setRemoveAuthError(''); }}
+          />
+          {removeAuthError && (
+            <div style={{ fontSize: 12, color: 'var(--color-danger)', background: '#FEF2F2', padding: '8px 12px', borderRadius: 6 }}>
+              {removeAuthError}
+            </div>
+          )}
+        </div>
       </Modal>
 
       {/* Factory Reset Modal */}

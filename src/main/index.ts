@@ -12,6 +12,8 @@ import { registerAuthHandlers } from './ipc/auth.ipc';
 import { registerClientHandlers } from './ipc/client.ipc';
 import { registerProjectsIPC } from './ipc/projects.ipc';
 import { registerDocumentsIPC } from './ipc/documents.ipc';
+import { registerMailIPC } from './ipc/mail.ipc';
+import { registerSystemIPC } from './ipc/system.ipc';
 
 const isDev = !app.isPackaged;
 let mainWindow: BrowserWindow | null = null;
@@ -95,6 +97,8 @@ app.whenReady().then(async () => {
   registerClientHandlers();
   registerProjectsIPC();
   registerDocumentsIPC();
+  registerMailIPC();
+  registerSystemIPC();
   createWindow();
 
   app.on('activate', () => {

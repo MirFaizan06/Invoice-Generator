@@ -19,6 +19,7 @@ import ClientsPage from './pages/Clients/index';
 import ProjectsPage from './pages/Projects/index';
 import DocumentsPage from './pages/Documents/index';
 import DocumentGeneratorPage from './pages/DocumentGenerator/index';
+import MailsPage from './pages/Mails/index';
 
 type AppState = 'splash' | 'loading' | 'auth-setup' | 'auth-login' | 'onboarding' | 'app';
 
@@ -121,6 +122,7 @@ export default function App() {
             <Route path="/projects" element={<ProjectsPage />} />
             <Route path="/documents" element={<DocumentsPage />} />
             <Route path="/document-generator" element={<DocumentGeneratorPage />} />
+            <Route path="/mails" element={<MailsPage />} />
           </Route>
         </Routes>
         <ToastContainer />

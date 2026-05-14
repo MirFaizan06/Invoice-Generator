@@ -205,6 +205,7 @@ export interface ElectronAPI {
     generatePDF: (id: number) => Promise<string>;
     getNextNumber: (businessId: number) => Promise<string>;
     exportBackup: (destPath: string) => Promise<{ count: number; total: number; zipPath: string }>;
+    importFromHTML: (htmlContent: string) => Promise<{ success: boolean; invoice?: Invoice; error?: string }>;
   };
   finance: {
     getSummary: (year?: number) => Promise<FinanceSummary>;
@@ -269,6 +270,15 @@ export interface ElectronAPI {
     generatePDF: (id: number) => Promise<string>;
     delete: (id: number) => Promise<void>;
     hasSignedMSA: (clientId: number) => Promise<boolean>;
+  };
+  mail: {
+    send: (data: SendEmailData) => Promise<{ success: boolean; error?: string }>;
+    getLogs: (filters?: { businessId?: number; status?: string }) => Promise<MailLog[]>;
+    deleteLog: (id: number) => Promise<void>;
+  };
+  system: {
+    restartApp: () => Promise<void>;
+    getNetworkStatus: () => Promise<boolean>;
   };
 }
 
@@ -371,6 +381,30 @@ export interface CreateLegalDocumentData {
   content_html: string;
   metadata: string;
   expiry_date?: string;
+}
+
+export interface MailLog {
+  id: number;
+  business_id: number;
+  to_email: string;
+  to_name: string;
+  subject: string;
+  body_html: string;
+  related_type: string;
+  related_id: number | null;
+  status: 'sent' | 'failed';
+  error_message: string;
+  sent_at: string;
+}
+
+export interface SendEmailData {
+  to: string;
+  toName: string;
+  subject: string;
+  bodyHtml: string;
+  businessId: number;
+  relatedType?: string;
+  relatedId?: number;
 }
 
 declare global {

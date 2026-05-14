@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { Button } from '../../components/UI/Button';
 import { Input, TextArea } from '../../components/UI/Input';
+import { Tooltip } from '../../components/Tooltip';
 import { useBusinessStore } from '../../store/business.store';
 import { useAppStore } from '../../store/app.store';
 import type {
@@ -427,26 +428,56 @@ export const DocumentGeneratorPage: React.FC = () => {
 
             {selectedType === 'msa' && (
               <div className="docgen-fields">
-                <Input label="Jurisdiction" placeholder="e.g. Mumbai, Maharashtra" value={msaForm.jurisdiction} onChange={(e) => setMsaForm((f) => ({ ...f, jurisdiction: e.target.value }))} />
-                <Input label="Liability Cap" placeholder="e.g. 3 months of fees" value={msaForm.liability_cap} onChange={(e) => setMsaForm((f) => ({ ...f, liability_cap: e.target.value }))} />
-                <Input label="Governing Law" placeholder="Laws of India" value={msaForm.governing_law} onChange={(e) => setMsaForm((f) => ({ ...f, governing_law: e.target.value }))} />
+                <div className="input-wrapper">
+                  <div className="label-row"><label>Jurisdiction</label><Tooltip text="The city and state where legal disputes will be resolved. Usually where your business is located (e.g., Mumbai, Maharashtra)." /></div>
+                  <Input placeholder="e.g. Mumbai, Maharashtra" value={msaForm.jurisdiction} onChange={(e) => setMsaForm((f) => ({ ...f, jurisdiction: e.target.value }))} />
+                </div>
+                <div className="input-wrapper">
+                  <div className="label-row"><label>Liability Cap</label><Tooltip text="The maximum amount you can be held liable for. Common values: '3 months of fees' or a fixed amount like '₹50,000'." /></div>
+                  <Input placeholder="e.g. 3 months of fees" value={msaForm.liability_cap} onChange={(e) => setMsaForm((f) => ({ ...f, liability_cap: e.target.value }))} />
+                </div>
+                <div className="input-wrapper">
+                  <div className="label-row"><label>Governing Law</label><Tooltip text="Which country's laws govern this contract. Default is 'Laws of India' for domestic clients." /></div>
+                  <Input placeholder="Laws of India" value={msaForm.governing_law} onChange={(e) => setMsaForm((f) => ({ ...f, governing_law: e.target.value }))} />
+                </div>
                 <div className="docgen-fields-row">
-                  <Input label="Notice Period (days)" type="number" min="1" value={msaForm.notice_period_days} onChange={(e) => setMsaForm((f) => ({ ...f, notice_period_days: Number(e.target.value) }))} />
-                  <Input label="Payment Due (days)" type="number" min="1" value={msaForm.payment_due_days} onChange={(e) => setMsaForm((f) => ({ ...f, payment_due_days: Number(e.target.value) }))} />
+                  <div className="input-wrapper">
+                    <div className="label-row"><label>Notice Period (days)</label><Tooltip text="How many days' written notice either party must give before terminating the agreement. 30 days is standard." /></div>
+                    <Input type="number" min="1" value={msaForm.notice_period_days} onChange={(e) => setMsaForm((f) => ({ ...f, notice_period_days: Number(e.target.value) }))} />
+                  </div>
+                  <div className="input-wrapper">
+                    <div className="label-row"><label>Payment Due (days)</label><Tooltip text="Number of days after invoice date by which payment must be received. 15 is standard for freelancers." /></div>
+                    <Input type="number" min="1" value={msaForm.payment_due_days} onChange={(e) => setMsaForm((f) => ({ ...f, payment_due_days: Number(e.target.value) }))} />
+                  </div>
                 </div>
               </div>
             )}
 
             {selectedType === 'sow' && (
               <div className="docgen-fields">
-                <TextArea label="Project Overview" placeholder="Describe the project..." value={sowForm.project_description} onChange={(e) => setSowForm((f) => ({ ...f, project_description: e.target.value }))} rows={3} />
-                <TextArea label="Detailed Scope" placeholder="List all deliverables and tasks..." value={sowForm.scope} onChange={(e) => setSowForm((f) => ({ ...f, scope: e.target.value }))} rows={3} />
-                <TextArea label="Out of Scope" placeholder="What is explicitly not included..." value={sowForm.out_of_scope} onChange={(e) => setSowForm((f) => ({ ...f, out_of_scope: e.target.value }))} rows={2} />
-                <TextArea label="Milestones & Deliverables" placeholder="Key milestones and delivery dates..." value={sowForm.milestones} onChange={(e) => setSowForm((f) => ({ ...f, milestones: e.target.value }))} rows={3} />
+                <div className="input-wrapper">
+                  <div className="label-row"><label>Project Overview</label><Tooltip text="A high-level description of the project — what the client wants and why. 2-4 sentences is enough." /></div>
+                  <TextArea placeholder="Describe the project..." value={sowForm.project_description} onChange={(e) => setSowForm((f) => ({ ...f, project_description: e.target.value }))} rows={3} />
+                </div>
+                <div className="input-wrapper">
+                  <div className="label-row"><label>Detailed Scope</label><Tooltip text="List specifically what work is included. Be precise — 'Build a 5-page website' not just 'Build website'. Ambiguity causes disputes." /></div>
+                  <TextArea placeholder="List all deliverables and tasks..." value={sowForm.scope} onChange={(e) => setSowForm((f) => ({ ...f, scope: e.target.value }))} rows={3} />
+                </div>
+                <div className="input-wrapper">
+                  <div className="label-row"><label>Out of Scope</label><Tooltip text="Explicitly list what is NOT included. This protects you from scope creep. Example: 'Does not include copywriting, hosting, or SEO.'" /></div>
+                  <TextArea placeholder="What is explicitly not included..." value={sowForm.out_of_scope} onChange={(e) => setSowForm((f) => ({ ...f, out_of_scope: e.target.value }))} rows={2} />
+                </div>
+                <div className="input-wrapper">
+                  <div className="label-row"><label>Milestones &amp; Deliverables</label><Tooltip text="List what you'll deliver and when. Example: 'Week 1: Wireframes. Week 3: Design mockups. Week 5: Final delivery.'" /></div>
+                  <TextArea placeholder="Key milestones and delivery dates..." value={sowForm.milestones} onChange={(e) => setSowForm((f) => ({ ...f, milestones: e.target.value }))} rows={3} />
+                </div>
                 <div className="docgen-fields-row">
-                  <Input label="Total Amount" type="number" min="0" value={sowForm.total_amount} onChange={(e) => setSowForm((f) => ({ ...f, total_amount: Number(e.target.value) }))} />
                   <div className="input-wrapper">
-                    <label className="input-label">Currency</label>
+                    <div className="label-row"><label>Total Amount</label><Tooltip text="The total project fee in the selected currency. This amount will appear on the SOW and is what the linked invoices should add up to." /></div>
+                    <Input type="number" min="0" value={sowForm.total_amount} onChange={(e) => setSowForm((f) => ({ ...f, total_amount: Number(e.target.value) }))} />
+                  </div>
+                  <div className="input-wrapper">
+                    <div className="label-row"><label>Currency</label><Tooltip text="The currency for this project. Choose based on your client's location." /></div>
                     <select className="docgen-select" value={sowForm.currency} onChange={(e) => setSowForm((f) => ({ ...f, currency: e.target.value }))}>
                       <option value="INR">INR</option>
                       <option value="USD">USD</option>
@@ -455,7 +486,7 @@ export const DocumentGeneratorPage: React.FC = () => {
                   </div>
                 </div>
                 <div className="input-wrapper">
-                  <label className="input-label">Payment Terms</label>
+                  <div className="label-row"><label>Payment Terms</label><Tooltip text="When and how payment is made. '50% upfront' reduces your financial risk for new clients." /></div>
                   <select className="docgen-select" value={sowForm.payment_terms} onChange={(e) => setSowForm((f) => ({ ...f, payment_terms: e.target.value }))}>
                     <option value="Due on Receipt">Due on Receipt</option>
                     <option value="Net 15">Net 15</option>
@@ -464,8 +495,14 @@ export const DocumentGeneratorPage: React.FC = () => {
                   </select>
                 </div>
                 <div className="docgen-fields-row">
-                  <Input label="Start Date" type="date" value={sowForm.start_date} onChange={(e) => setSowForm((f) => ({ ...f, start_date: e.target.value }))} />
-                  <Input label="End Date" type="date" value={sowForm.end_date} onChange={(e) => setSowForm((f) => ({ ...f, end_date: e.target.value }))} />
+                  <div className="input-wrapper">
+                    <div className="label-row"><label>Start Date</label><Tooltip text="The expected project timeline. These dates appear on the SOW but are not legally binding unless stated as such." /></div>
+                    <Input type="date" value={sowForm.start_date} onChange={(e) => setSowForm((f) => ({ ...f, start_date: e.target.value }))} />
+                  </div>
+                  <div className="input-wrapper">
+                    <div className="label-row"><label>End Date</label><Tooltip text="The expected project end date. These dates appear on the SOW but are not legally binding unless stated as such." /></div>
+                    <Input type="date" value={sowForm.end_date} onChange={(e) => setSowForm((f) => ({ ...f, end_date: e.target.value }))} />
+                  </div>
                 </div>
               </div>
             )}
@@ -473,7 +510,7 @@ export const DocumentGeneratorPage: React.FC = () => {
             {selectedType === 'nda' && (
               <div className="docgen-fields">
                 <div className="input-wrapper">
-                  <label className="input-label">Confidentiality Period</label>
+                  <div className="label-row"><label>Confidentiality Period</label><Tooltip text="How long the NDA stays active after signing. 2 years is standard for most software projects." /></div>
                   <select className="docgen-select" value={ndaForm.confidentiality_period_years} onChange={(e) => setNdaForm((f) => ({ ...f, confidentiality_period_years: Number(e.target.value) }))}>
                     <option value={1}>1 Year</option>
                     <option value={2}>2 Years</option>
@@ -481,26 +518,50 @@ export const DocumentGeneratorPage: React.FC = () => {
                     <option value={5}>5 Years</option>
                   </select>
                 </div>
-                <TextArea label="Exclusions" placeholder="List any exclusions to confidentiality..." value={ndaForm.exclusions} onChange={(e) => setNdaForm((f) => ({ ...f, exclusions: e.target.value }))} rows={3} />
-                <Input label="Governing Law" placeholder="Laws of India" value={ndaForm.governing_law} onChange={(e) => setNdaForm((f) => ({ ...f, governing_law: e.target.value }))} />
+                <div className="input-wrapper">
+                  <div className="label-row"><label>Exclusions</label><Tooltip text="Information that is NOT considered confidential — e.g., information already in the public domain. Leave blank for standard exclusions only." /></div>
+                  <TextArea placeholder="List any exclusions to confidentiality..." value={ndaForm.exclusions} onChange={(e) => setNdaForm((f) => ({ ...f, exclusions: e.target.value }))} rows={3} />
+                </div>
+                <div className="input-wrapper">
+                  <div className="label-row"><label>Governing Law</label><Tooltip text="Which country's laws apply. Normally the same as your MSA governing law." /></div>
+                  <Input placeholder="Laws of India" value={ndaForm.governing_law} onChange={(e) => setNdaForm((f) => ({ ...f, governing_law: e.target.value }))} />
+                </div>
               </div>
             )}
 
             {selectedType === 'sla' && (
               <div className="docgen-fields">
-                <TextArea label="Services Covered" placeholder="Describe the services covered by this SLA..." value={slaForm.services_description} onChange={(e) => setSlaForm((f) => ({ ...f, services_description: e.target.value }))} rows={3} />
-                <div className="docgen-fields-row">
-                  <Input label="Uptime %" placeholder="99.5" value={slaForm.uptime_percent} onChange={(e) => setSlaForm((f) => ({ ...f, uptime_percent: e.target.value }))} />
-                  <Input label="Support Hours" placeholder="Mon–Fri, 9:00 AM – 6:00 PM IST" value={slaForm.support_hours} onChange={(e) => setSlaForm((f) => ({ ...f, support_hours: e.target.value }))} />
+                <div className="input-wrapper">
+                  <div className="label-row"><label>Services Covered</label><Tooltip text="Describe what services are covered by this SLA — e.g., 'Hosting and maintenance of the client's e-commerce website at xyz.com'." /></div>
+                  <TextArea placeholder="Describe the services covered by this SLA..." value={slaForm.services_description} onChange={(e) => setSlaForm((f) => ({ ...f, services_description: e.target.value }))} rows={3} />
                 </div>
                 <div className="docgen-fields-row">
-                  <Input label="Response Time – Critical" placeholder="2 hours" value={slaForm.response_time_critical} onChange={(e) => setSlaForm((f) => ({ ...f, response_time_critical: e.target.value }))} />
-                  <Input label="Response Time – High" placeholder="8 hours" value={slaForm.response_time_high} onChange={(e) => setSlaForm((f) => ({ ...f, response_time_high: e.target.value }))} />
-                </div>
-                <div className="docgen-fields-row">
-                  <Input label="Monthly Fee" type="number" min="0" value={slaForm.monthly_fee} onChange={(e) => setSlaForm((f) => ({ ...f, monthly_fee: Number(e.target.value) }))} />
                   <div className="input-wrapper">
-                    <label className="input-label">Currency</label>
+                    <div className="label-row"><label>Uptime %</label><Tooltip text="The percentage of time the service is guaranteed to be available. 99.5% = allows ~3.6 hours downtime/month. Never promise 100%." /></div>
+                    <Input placeholder="99.5" value={slaForm.uptime_percent} onChange={(e) => setSlaForm((f) => ({ ...f, uptime_percent: e.target.value }))} />
+                  </div>
+                  <div className="input-wrapper">
+                    <div className="label-row"><label>Support Hours</label><Tooltip text="When you're available to respond. Be realistic — e.g., 'Mon–Fri, 9 AM – 6 PM IST'. Clients will hold you to this." /></div>
+                    <Input placeholder="Mon–Fri, 9:00 AM – 6:00 PM IST" value={slaForm.support_hours} onChange={(e) => setSlaForm((f) => ({ ...f, support_hours: e.target.value }))} />
+                  </div>
+                </div>
+                <div className="docgen-fields-row">
+                  <div className="input-wrapper">
+                    <div className="label-row"><label>Response Time – Critical</label><Tooltip text="How quickly you'll respond to a critical issue (service completely down). 2-4 hours is realistic for solo developers." /></div>
+                    <Input placeholder="2 hours" value={slaForm.response_time_critical} onChange={(e) => setSlaForm((f) => ({ ...f, response_time_critical: e.target.value }))} />
+                  </div>
+                  <div className="input-wrapper">
+                    <div className="label-row"><label>Response Time – High</label><Tooltip text="Response time for major issues (important feature broken). 4-8 hours is standard." /></div>
+                    <Input placeholder="8 hours" value={slaForm.response_time_high} onChange={(e) => setSlaForm((f) => ({ ...f, response_time_high: e.target.value }))} />
+                  </div>
+                </div>
+                <div className="docgen-fields-row">
+                  <div className="input-wrapper">
+                    <div className="label-row"><label>Monthly Fee</label><Tooltip text="The monthly retainer amount for this SLA. This is separate from project fees." /></div>
+                    <Input type="number" min="0" value={slaForm.monthly_fee} onChange={(e) => setSlaForm((f) => ({ ...f, monthly_fee: Number(e.target.value) }))} />
+                  </div>
+                  <div className="input-wrapper">
+                    <div className="label-row"><label>Currency</label><Tooltip text="The currency for this project. Choose based on your client's location." /></div>
                     <select className="docgen-select" value={slaForm.currency} onChange={(e) => setSlaForm((f) => ({ ...f, currency: e.target.value }))}>
                       <option value="INR">INR</option>
                       <option value="USD">USD</option>
@@ -508,7 +569,10 @@ export const DocumentGeneratorPage: React.FC = () => {
                     </select>
                   </div>
                 </div>
-                <TextArea label="Exclusions" placeholder="What is excluded from this SLA..." value={slaForm.exclusions} onChange={(e) => setSlaForm((f) => ({ ...f, exclusions: e.target.value }))} rows={2} />
+                <div className="input-wrapper">
+                  <div className="label-row"><label>Exclusions</label><Tooltip text="Situations where the SLA doesn't apply — e.g., client-side server failures, force majeure events, third-party outages." /></div>
+                  <TextArea placeholder="What is excluded from this SLA..." value={slaForm.exclusions} onChange={(e) => setSlaForm((f) => ({ ...f, exclusions: e.target.value }))} rows={2} />
+                </div>
               </div>
             )}
 

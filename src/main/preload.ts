@@ -22,6 +22,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     generatePDF: (id: number) => ipcRenderer.invoke('invoice:generatePDF', id),
     getNextNumber: (businessId: number) => ipcRenderer.invoke('invoice:getNextNumber', businessId),
     exportBackup: (destPath: string) => ipcRenderer.invoke('invoice:exportBackup', destPath),
+    importFromHTML: (htmlContent: string) => ipcRenderer.invoke('invoice:importFromHTML', htmlContent),
   },
   finance: {
     getSummary: (year?: number) => ipcRenderer.invoke('finance:getSummary', year),
@@ -88,5 +89,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
     generatePDF: (id: number) => ipcRenderer.invoke('document:generatePDF', id),
     delete: (id: number) => ipcRenderer.invoke('document:delete', id),
     hasSignedMSA: (clientId: number) => ipcRenderer.invoke('document:hasSignedMSA', clientId),
+  },
+  mail: {
+    send: (data: unknown) => ipcRenderer.invoke('mail:send', data),
+    getLogs: (filters?: unknown) => ipcRenderer.invoke('mail:getLogs', filters),
+    deleteLog: (id: number) => ipcRenderer.invoke('mail:deleteLog', id),
+  },
+  system: {
+    restartApp: () => ipcRenderer.invoke('system:restartApp'),
+    getNetworkStatus: () => ipcRenderer.invoke('system:getNetworkStatus'),
   },
 });

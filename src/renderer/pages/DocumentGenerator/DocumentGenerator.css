@@ -231,6 +231,30 @@
   gap: 12px;
 }
 
+/* Consistent label styling inside fields section */
+.docgen-fields label,
+.docgen-field-label {
+  display: block;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  margin-bottom: 4px;
+}
+.docgen-fields .label-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+.docgen-fields .label-row label {
+  margin-bottom: 0;
+}
+/* Ensure select height matches Input height */
+.docgen-select {
+  height: 38px;
+  padding: 0 10px;
+}
+
 /* ── Loading ──────────────────────────────────────────────── */
 .docgen-loading {
   flex: 1;

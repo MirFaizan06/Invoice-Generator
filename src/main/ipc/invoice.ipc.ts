@@ -5,6 +5,7 @@ import {
 } from '../services/invoice.service';
 import { generatePDF } from '../services/pdf.service';
 import { createBackupZip } from '../services/backup.service';
+import { importInvoiceFromHtml } from '../services/import-invoice.service';
 
 export function registerInvoiceIPC(): void {
   ipcMain.handle('invoice:getAll', (_, filters) => getAllInvoices(filters));
@@ -24,4 +25,5 @@ export function registerInvoiceIPC(): void {
     return pdfPath;
   });
   ipcMain.handle('invoice:exportBackup', async (_, destPath: string) => createBackupZip(destPath));
+  ipcMain.handle('invoice:importFromHTML', (_, htmlContent: string) => importInvoiceFromHtml(htmlContent));
 }

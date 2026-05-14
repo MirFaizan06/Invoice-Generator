@@ -278,6 +278,21 @@ function runMigrations(db: SQLiteWrapper): void {
       FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE,
       FOREIGN KEY (sow_document_id) REFERENCES legal_documents(id) ON DELETE CASCADE
     );
+
+    CREATE TABLE IF NOT EXISTS mail_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      business_id INTEGER NOT NULL,
+      to_email TEXT NOT NULL,
+      to_name TEXT DEFAULT '',
+      subject TEXT NOT NULL,
+      body_html TEXT NOT NULL,
+      related_type TEXT DEFAULT '',
+      related_id INTEGER DEFAULT NULL,
+      status TEXT DEFAULT 'sent',
+      error_message TEXT DEFAULT '',
+      sent_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
+    );
   `);
 
   // businesses new columns
